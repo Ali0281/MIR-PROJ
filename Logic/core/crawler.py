@@ -430,7 +430,7 @@ class IMDbCrawler:
         except Exception as e:
             print(f"failed to get title, exception : {e}")
         finally:
-            return title
+            return title if title is not None else ""
 
     def get_first_page_summary(self, soup):
         """
@@ -456,7 +456,7 @@ class IMDbCrawler:
         except Exception as e:
             print(f"failed to get first page summary, exception : {e}")
         finally:
-            return summary
+            return summary if summary is not None else ""
 
     def get_directors(self, soup):
         """
@@ -710,7 +710,7 @@ class IMDbCrawler:
         except Exception as e:
             print(f"failed to get rating, exception : {e}")
         finally:
-            return point
+            return point if point is not None else ""
 
     def get_mpaa(self, soup):
         """
@@ -735,7 +735,7 @@ class IMDbCrawler:
         except Exception as e:
             print(f"failed to get mpaa, exception : mpaa field doesnt exist")
         finally:
-            return mpaa
+            return mpaa if mpaa is not None else ""
 
     def get_release_year(self, soup):
         """
@@ -756,11 +756,11 @@ class IMDbCrawler:
                                           "data-testid": "title-details-releasedate"})
             release = release_li.div.ul.li.a.text
             # print(release)
-            if release == None: raise Exception("unknown released field")
+            if release is None: raise Exception("unknown released field")
         except Exception as e:
             print(f"failed to get released, exception : {e}")
         finally:
-            return release
+            return release if release is not None else ""
 
     def get_languages(self, soup):
         """
@@ -838,7 +838,7 @@ class IMDbCrawler:
         except Exception as e:
             print(f"failed to get budget, budget field doesnt exist")
         finally:
-            return budget_amounts[0] if len(budget_amounts) != 0 else None
+            return budget_amounts[0] if len(budget_amounts) != 0 else ""
 
     def get_gross_worldwide(self, soup):
         """
@@ -865,25 +865,25 @@ class IMDbCrawler:
         except Exception as e:
             print(f"failed to get gross worldwide, exception : {e}")
         finally:
-            return gross_amounts[0] if len(gross_amounts) != 0 else None
+            return gross_amounts[0] if len(gross_amounts) != 0 else ""
 
 
 def main():
-    imdb_crawler = IMDbCrawler(crawling_threshold=200)
+    imdb_crawler = IMDbCrawler(crawling_threshold=300)
 
-    imdb_crawler.read_from_file_as_json()
+    """imdb_crawler.read_from_file_as_json()
     print(len(imdb_crawler.added_ids))
     print(len(set(imdb_crawler.added_ids)))
     print(len(imdb_crawler.crawled))
     print(len(imdb_crawler.movies))
-    print(len(imdb_crawler.not_crawled))
+    print(len(imdb_crawler.not_crawled))"""
 
 
 
-    """#imdb_crawler.reset_files()
+    #imdb_crawler.reset_files()
     imdb_crawler.read_from_file_as_json()
     imdb_crawler.start_crawling()
-    imdb_crawler.write_to_file_as_json()"""
+    imdb_crawler.write_to_file_as_json()
 
 
 if __name__ == '__main__':
