@@ -320,6 +320,7 @@ class IMDbCrawler:
             The URL of the site
         """
         # TODO √
+        # TODO : add back the try !
         # try:
         soup = BeautifulSoup(res.content, 'html.parser')
 
@@ -368,7 +369,7 @@ class IMDbCrawler:
         ----------
         url: str
             The URL of the site
-        Returnsa
+        Returns
         ----------
         str
             The URL of the summary page
