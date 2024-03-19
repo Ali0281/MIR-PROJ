@@ -1,3 +1,5 @@
+import json
+
 import numpy as np
 import re
 import itertools
@@ -6,7 +8,7 @@ from string import punctuation
 
 
 class MinHashLSH:
-    def __init__(self, documents, num_hashes):
+    def __init__(self, documents, document_ids, num_hashes):
         """
         Initialize the MinHashLSH
 
@@ -18,6 +20,8 @@ class MinHashLSH:
             Number of hashes for mini-hashing.
         """
         # TODO : note : i will use dict["summaries"] or .join of it
+        # TODO : note : i used joined summaries for documents so i need to save doc id
+        self.documents_ids = document_ids # TODO : note : mine
 
         self.documents = documents
         self.num_hashes = num_hashes
@@ -25,7 +29,8 @@ class MinHashLSH:
         self.num_shingles = 0  # TODO : need to be updated
         self.hashes = None  # TODO : need to be updated
         self.presence = None  # TODO : need to be updated
-        self.documents_shingeled = None  # TODO : need to be done
+        self.documents_shingled = None  # TODO : need to be done
+        self.shingles = set() # TODO : need to be updated
 
     def shingle_document(self, document, k=2):
         """
@@ -46,11 +51,15 @@ class MinHashLSH:
         # TODO : note : i will shingle by word as the slides imply
         # TODO : note : using set as df doesnt matter
         shingles = set()
+        # TODO : note : remove not needed punctuations for pure words
         words = [word.strip(punctuation) for word in document.split()]
         for i in range(0, len(words) + 1 - k):
             shingles.add(" ".join(words[i: i + k]))
             # print(" ".join(words[i: i + k]))
-        return shingles
+
+        self.shingles.update(shingles)
+        self.num_shingles = len(self.shingles)
+        return self.shingles
 
     def build_characteristic_matrix(self):
         """
@@ -61,7 +70,7 @@ class MinHashLSH:
         numpy.ndarray
             The binary characteristic matrix.
         """
-        presence = dict()
+        presence = set()
         shingled_docs = []
         for doc in self.documents:
             shingled_docs.append(self.shingle_document(document=doc, k=2))
@@ -71,16 +80,20 @@ class MinHashLSH:
         self.num_shingles = len(presence)
         self.presence = sorted(presence)
 
-        characteristic = np.zeros(self.num_documents, self.num_shingles)
-        for i, shingle in enumerate(presence):
-            for j, shingles in enumerate(shingled_docs):
+        characteristic = np.zeros((self.num_documents, self.num_shingles))
+        for i, shingles in enumerate(shingled_docs):
+            for j, shingle in enumerate(presence):
                 if shingle in shingles:
                     characteristic[i, j] = 1
 
         return characteristic
 
     def create_hashes(self):
+        # TODO : note : i will use this as different hashes
         possible_hashes = list(itertools.permutations(range(self.num_shingles)))
+
+        print(self.num_shingles)
+        print(self.num_hashes)
         self.hashes = random.sample(possible_hashes, self.num_hashes)
 
     def min_hash_signature(self):
@@ -92,15 +105,17 @@ class MinHashLSH:
         numpy.ndarray
             The Min-Hash signatures matrix.
         """
+        self.create_hashes()
         characteristic = self.build_characteristic_matrix()
-        min_hash_signatures = np.zeros((self.num_hashes, self.num_documents))
-        for index_hash, perm in enumerate(self.hashes):
-            for index_doc, doc in enumerate(self.documents_shingeled):
-                for index_perm, index in enumerate(perm):
-                    if self.presence[index] in doc:
-                        characteristic[index_hash, index_doc] = index_perm
+        min_hash_signatures = np.full((self.num_hashes, self.num_documents), np.inf)
 
-        return characteristic
+        for i in range(self.num_documents):
+            for j in range(self.num_shingles):
+                if characteristic[i, j] == 1:
+                    for index, perm in enumerate(self.hashes):
+                        min_hash_signatures[index, i] = min(min_hash_signatures[index, i], perm[i])
+
+        return min_hash_signatures
 
     def lsh_buckets(self, signature, bands=10, rows_per_band=10):
         """
@@ -126,9 +141,9 @@ class MinHashLSH:
 
         for i in range(bands):
             for j in range(self.num_documents):
-                slice = signature[rows_per_band * i: rows_per_band * (i + 1), j:j+1]
+                slice_ = signature[rows_per_band * i: rows_per_band * (i + 1), j:j+1]
                 hashed = hash(tuple(slice.flatten()))
-                if hashed in buckets: buckets[hashed].append(j)
+                if hashed in buckets: buckets[hashed].append(self.documents_id[j])
                 else : buckets[hashed] = []
 
         return buckets
@@ -142,7 +157,7 @@ class MinHashLSH:
         dict
             A dictionary mapping bucket IDs to lists of document indices.
         """
-        # TODO : definitely needs debug
+        # TODO
         return self.lsh_buckets(self.min_hash_signature())
 
     def jaccard_score(self, first_set, second_set):
@@ -161,7 +176,8 @@ class MinHashLSH:
         float
             Jaccard score.
         """
-        return len(first_set.intersection(second_set)) / len(first_set.union(second_set)) if len(first_set.union(second_set)) != 0 else 0
+        if len(first_set.union(second_set)) == 0 : return 0
+        return len(first_set.intersection(second_set)) / len(first_set.union(second_set))
 
     def jaccard_similarity_test(self, buckets, all_documents):
         """
@@ -213,9 +229,17 @@ class MinHashLSH:
 
 
 def main():
-    test = MinHashLSH(None, None)
-    test.shingle_document(
-        " One of the most  influential movies of all time, that still holds up extremely well  nearly 50 years later.  Akira Kurosawa's epic tale of heroism and barbarism set the standard in  so many ways it's hard to imagine that any modern film does not show  its influence in some way or other. A great script, great characters,  mostly great acting, splendid cinematography and action sequences that  wrote the book about how these things should be filmed. Even now, after  so many have tried to imitate or beat it, Seven Samurai remains a  totally gripping 3.5 hour experience.  Akira Kurosawa is one of the gods of Cinema - men who seem to have been  born to make films, who have it in their blood.")
+
+    with open('LSHFakeData.json', 'r') as f:
+        data = json.load(f)
+
+    ids = []
+    docs = []
+    for d in data:
+        ids.append(d["id"])
+        docs.append("\n".join(d["summaries"]))
+    m = MinHashLSH(docs, ids, 10)
+    print(m.perform_lsh())
 
 
 if __name__ == '__main__':
