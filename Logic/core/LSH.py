@@ -1,6 +1,8 @@
 import numpy as np
+import re
 import itertools
 import random
+from string import punctuation
 
 
 class MinHashLSH:
@@ -15,8 +17,15 @@ class MinHashLSH:
         num_hashes : int
             Number of hashes for mini-hashing.
         """
+        # TODO : note : i will use dict["summaries"] or .join of it
+
         self.documents = documents
         self.num_hashes = num_hashes
+        self.num_documents = len(documents)
+        self.num_shingles = 0  # TODO : need to be updated
+        self.hashes = None  # TODO : need to be updated
+        self.presence = None  # TODO : need to be updated
+        self.documents_shingeled = None  # TODO : need to be done
 
     def shingle_document(self, document, k=2):
         """
@@ -34,7 +43,13 @@ class MinHashLSH:
         set
             A set of shingles.
         """
-        shingles = None
+        # TODO : note : i will shingle by word as the slides imply
+        # TODO : note : using set as df doesnt matter
+        shingles = set()
+        words = [word.strip(punctuation) for word in document.split()]
+        for i in range(0, len(words) + 1 - k):
+            shingles.add(" ".join(words[i: i + k]))
+            # print(" ".join(words[i: i + k]))
         return shingles
 
     def build_characteristic_matrix(self):
@@ -46,8 +61,27 @@ class MinHashLSH:
         numpy.ndarray
             The binary characteristic matrix.
         """
-        # TODO
-        return
+        presence = dict()
+        shingled_docs = []
+        for doc in self.documents:
+            shingled_docs.append(self.shingle_document(document=doc, k=2))
+            presence.update(shingled_docs[-1])
+
+        # TODO : note : for a definite ans
+        self.num_shingles = len(presence)
+        self.presence = sorted(presence)
+
+        characteristic = np.zeros(self.num_documents, self.num_shingles)
+        for i, shingle in enumerate(presence):
+            for j, shingles in enumerate(shingled_docs):
+                if shingle in shingles:
+                    characteristic[i, j] = 1
+
+        return characteristic
+
+    def create_hashes(self):
+        possible_hashes = list(itertools.permutations(range(self.num_shingles)))
+        self.hashes = random.sample(possible_hashes, self.num_hashes)
 
     def min_hash_signature(self):
         """
@@ -58,8 +92,15 @@ class MinHashLSH:
         numpy.ndarray
             The Min-Hash signatures matrix.
         """
-        # TODO
-        return
+        characteristic = self.build_characteristic_matrix()
+        min_hash_signatures = np.zeros((self.num_hashes, self.num_documents))
+        for index_hash, perm in enumerate(self.hashes):
+            for index_doc, doc in enumerate(self.documents_shingeled):
+                for index_perm, index in enumerate(perm):
+                    if self.presence[index] in doc:
+                        characteristic[index_hash, index_doc] = index_perm
+
+        return characteristic
 
     def lsh_buckets(self, signature, bands=10, rows_per_band=10):
         """
@@ -79,8 +120,18 @@ class MinHashLSH:
         dict
             A dictionary mapping bucket IDs to lists of document indices.
         """
-        # TODO
-        return
+        # TODO : need to add the id part!
+
+        buckets = {}
+
+        for i in range(bands):
+            for j in range(self.num_documents):
+                slice = signature[rows_per_band * i: rows_per_band * (i + 1), j:j+1]
+                hashed = hash(tuple(slice.flatten()))
+                if hashed in buckets: buckets[hashed].append(j)
+                else : buckets[hashed] = []
+
+        return buckets
 
     def perform_lsh(self):
         """
@@ -91,8 +142,8 @@ class MinHashLSH:
         dict
             A dictionary mapping bucket IDs to lists of document indices.
         """
-        # TODO
-        return
+        # TODO : definitely needs debug
+        return self.lsh_buckets(self.min_hash_signature())
 
     def jaccard_score(self, first_set, second_set):
         """
@@ -110,8 +161,7 @@ class MinHashLSH:
         float
             Jaccard score.
         """
-        # TODO
-        pass
+        return len(first_set.intersection(second_set)) / len(first_set.union(second_set)) if len(first_set.union(second_set)) != 0 else 0
 
     def jaccard_similarity_test(self, buckets, all_documents):
         """
@@ -160,3 +210,13 @@ class MinHashLSH:
 
         # a good score is around 0.8
         print("your final score in near duplicate detection:", correct_near_duplicates / all_near_duplicates)
+
+
+def main():
+    test = MinHashLSH(None, None)
+    test.shingle_document(
+        " One of the most  influential movies of all time, that still holds up extremely well  nearly 50 years later.  Akira Kurosawa's epic tale of heroism and barbarism set the standard in  so many ways it's hard to imagine that any modern film does not show  its influence in some way or other. A great script, great characters,  mostly great acting, splendid cinematography and action sequences that  wrote the book about how these things should be filmed. Even now, after  so many have tried to imitate or beat it, Seven Samurai remains a  totally gripping 3.5 hour experience.  Akira Kurosawa is one of the gods of Cinema - men who seem to have been  born to make films, who have it in their blood.")
+
+
+if __name__ == '__main__':
+    main()
