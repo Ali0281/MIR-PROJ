@@ -1,4 +1,6 @@
 import re
+from nltk.tokenize import word_tokenize
+from nltk.stem import WordNetLemmatizer
 
 
 class Preprocessor:
@@ -15,12 +17,17 @@ class Preprocessor:
         # TODO
         self.documents = documents
         self.stopwords = []
+        self.lemmatizer = WordNetLemmatizer()
+        self.tokenizer = word_tokenize
         try:
             with open(path, 'r') as f:
                 for word in f:
                     self.stopwords.append(word.strip().lower())
         except Exception as e:
             print(f"couldn't get the stopwords file, exception : {e}")
+
+    def preprocess_text(self, text):
+        return self.remove_stopwords(self.remove_punctuations(self.remove_links(self.normalize(text))))
 
     def preprocess(self):
         """
@@ -31,8 +38,24 @@ class Preprocessor:
         List[str]
             The preprocessed documents.
         """
-         # TODO
-        return
+        for doc in self.documents:
+            # TODO : note : only give attention to <first_page_summary>, <summaries>, <synopsis>, <reviews>
+            doc["first_page_summary"] = self.preprocess_text(doc["first_page_summary"])
+
+            preprocessed_summaries = []
+            for summary in doc["summaries"]:
+                preprocessed_summaries.append(self.preprocess_text(summary))
+            doc["summaries"] = preprocessed_summaries
+
+            preprocessed_synopsis = []
+            for synopsis in doc["synopsis"]:
+                preprocessed_synopsis.append(self.preprocess_text(synopsis))
+            doc["synopsis"] = preprocessed_synopsis
+
+            preprocessed_reviews = []
+            for review in doc["reviews"]:
+                preprocessed_reviews.append(self.preprocess_text(review))
+            doc["reviews"] = preprocessed_reviews
 
     def normalize(self, text: str):
         """
@@ -49,7 +72,7 @@ class Preprocessor:
             The normalized text.
         """
         # TODO
-        return
+        return [self.lemmatizer.lemmatize(w.lower) for w in self.tokenize(text)]
 
     def remove_links(self, text: str):
         """
@@ -103,7 +126,7 @@ class Preprocessor:
             The list of words.
         """
         # TODO
-        return
+        return self.tokenizer(text)
 
     def remove_stopwords(self, text: str):
         """
@@ -120,5 +143,4 @@ class Preprocessor:
             The list of words with stopwords removed.
         """
         # TODO
-        return
-
+        return " ".join([word for word in self.tokenize(text) if word not in self.stopwords])

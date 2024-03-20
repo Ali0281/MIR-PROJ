@@ -1,3 +1,6 @@
+import heapq
+
+
 class SpellCorrection:
     def __init__(self, all_documents):
         """
@@ -8,6 +11,7 @@ class SpellCorrection:
         all_documents : list of str
             The input documents.
         """
+        # TODO : note : can get rid of lowers or add or ...
         self.all_shingled_words, self.word_counter = self.shingling_and_counting(all_documents)
 
     def shingle_word(self, word, k=2):
@@ -26,12 +30,17 @@ class SpellCorrection:
         set
             A set of shingles.
         """
+        # TODO :
         shingles = set()
-        
-        # TODO: Create shingle here
+        try:
+            for i in range(len(word) + 1 - k):
+                shingles.add(word[i: i + k])
+        except Exception as e:
+            shingles.add(word)
+            print(f"warning : cant shingle words for spell correction ,error : {e}")
+        finally:
+            return shingles
 
-        return shingles
-    
     def jaccard_score(self, first_set, second_set):
         """
         Calculate jaccard score.
@@ -50,8 +59,8 @@ class SpellCorrection:
         """
 
         # TODO: Calculate jaccard score here.
-
-        return
+        if len(first_set.union(second_set)) == 0: return 0
+        return len(first_set.intersection(second_set)) / len(first_set.union(second_set))
 
     def shingling_and_counting(self, all_documents):
         """
@@ -69,13 +78,20 @@ class SpellCorrection:
         word_counter : dict
             A dictionary from words to their TFs.
         """
+        # TODO :
         all_shingled_words = dict()
         word_counter = dict()
 
-        # TODO: Create shingled words dictionary and word counter dictionary here.
-                
+        for doc in all_documents:
+            for w in doc.lower().split():
+                # can strip or ... word
+                if w not in word_counter:
+                    word_counter[w] = 1
+                else:
+                    word_counter[w] += 1
+                if w not in all_shingled_words: all_shingled_words[w] = self.shingle_word(w)
         return all_shingled_words, word_counter
-    
+
     def find_nearest_words(self, word):
         """
         Find correct form of a misspelled word.
@@ -90,12 +106,34 @@ class SpellCorrection:
         list of str
             5 nearest words.
         """
+        # TODO :
         top5_candidates = list()
+        # can do more to make word more likely
+        word = word.lower()
+        self.all_shingled_words[word] = self.all_shingled_words.get(word, self.shingle_word(word))
+        shingles = self.all_shingled_words[word]
+        for key, value in self.all_shingled_words.items():
+            if key == word: continue
+            score = self.jaccard_score(shingles, value)
+            heapq.heappush(top5_candidates, (score, key, value))
+            if len(top5_candidates) > 5: heapq.heappop(top5_candidates)
+        return [word for score, word, shingles in sorted(top5_candidates)][::-1]
 
-        # TODO: Find 5 nearest candidates here.
+    def word_spell_checker(self, word):
+        self.all_shingled_words[word] = self.all_shingled_words.get(word, self.shingle_word(word))
 
-        return top5_candidates
-    
+        nearest_words = self.find_nearest_words(word)
+        scores = []
+        tf = [self.word_counter.get(n, 0) for n in nearest_words]
+        normalized_tf = [x / max(tf) for x in tf]
+
+        for n in nearest_words:
+            j_score = self.jaccard_score(self.all_shingled_words[word], self.all_shingled_words[n])
+            scores.append((n, j_score * normalized_tf[n]))
+
+        if len(scores) > 0 : return max(scores, key=lambda x: x[1])[0]
+        else : return word
+
     def spell_check(self, query):
         """
         Find correct form of a misspelled query.
@@ -110,8 +148,8 @@ class SpellCorrection:
         str
             Correct form of the query.
         """
-        final_result = ""
-        
-        # TODO: Do spell correction here.
-
-        return final_result
+        # TODO
+        query = query.lower()
+        estimated_query = ""
+        for w in query.split(): estimated_query += self.word_spell_checker(w) + " "
+        return estimated_query.strip()

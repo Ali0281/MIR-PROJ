@@ -154,7 +154,8 @@ class Index:
             summary = summary.split()
             for w in summary:
                 if w in self.index[Indexes.SUMMARIES.value]:
-                    self.index[Indexes.SUMMARIES.value][w][document["id"]] = self.index[Indexes.SUMMARIES.value][w].get(document["id"], 0) + summary.count(w)
+                    self.index[Indexes.SUMMARIES.value][w][document["id"]] = self.index[Indexes.SUMMARIES.value][w].get(
+                        document["id"], 0) + summary.count(w)
                 else:
                     self.index[Indexes.SUMMARIES.value][w] = {document["id"]: summary.count(w)}
 
@@ -167,9 +168,32 @@ class Index:
         document_id : str
             ID of the document to remove from all the indexes
         """
+        if document_id in self.index[Indexes.DOCUMENTS.value]: del self.index[Indexes.DOCUMENTS.value][document_id]
 
-        #         TODO
-        pass
+        star_keys_to_remove = []
+        for key, value in self.index[Indexes.STARS.value].items():
+            if document_id in value:
+                del value[document_id]
+                if len(value) == 0:
+                    star_keys_to_remove.append(key)
+
+        for key in star_keys_to_remove: del self.index[Indexes.STARS.value][key]
+
+        genre_keys_to_remove = []
+        for key, value in self.index[Indexes.GENRES.value].items():
+            if document_id in value:
+                del value[document_id]
+                if len(value) == 0:
+                    genre_keys_to_remove.append(key)
+        for key in genre_keys_to_remove: del self.index[Indexes.GENRES.value][key]
+
+        summary_keys_to_remove = []
+        for key, value in self.index[Indexes.SUMMARIES.value].items():
+            if document_id in value:
+                del value[document_id]
+                if len(value) == 0:
+                    summary_keys_to_remove.append(key)
+        for key in summary_keys_to_remove: del self.index[Indexes.SUMMARIES.value][key]
 
     def check_add_remove_is_correct(self):
         """
@@ -192,30 +216,31 @@ class Index:
             return
 
         if (set(index_after_add[Indexes.STARS.value]['tim']).difference(
-                set(index_before_add[Indexes.STARS.value]['tim']))
+                set(index_before_add[Indexes.STARS.value].get("tim", dict())))
                 != {dummy_document['id']}):
             print('Add is incorrect, tim')
             return
 
         if (set(index_after_add[Indexes.STARS.value]['henry']).difference(
-                set(index_before_add[Indexes.STARS.value]['henry']))
+                set(index_before_add[Indexes.STARS.value].get("henry", dict())))
                 != {dummy_document['id']}):
             print('Add is incorrect, henry')
             return
+
         if (set(index_after_add[Indexes.GENRES.value]['drama']).difference(
-                set(index_before_add[Indexes.GENRES.value]['drama']))
+                set(index_before_add[Indexes.GENRES.value].get("drama", dict())))
                 != {dummy_document['id']}):
             print('Add is incorrect, drama')
             return
 
         if (set(index_after_add[Indexes.GENRES.value]['crime']).difference(
-                set(index_before_add[Indexes.GENRES.value]['crime']))
+                set(index_before_add[Indexes.GENRES.value].get("crime", dict())))
                 != {dummy_document['id']}):
             print('Add is incorrect, crime')
             return
 
         if (set(index_after_add[Indexes.SUMMARIES.value]['good']).difference(
-                set(index_before_add[Indexes.SUMMARIES.value]['good']))
+                set(index_before_add[Indexes.SUMMARIES.value].get("good", dict())))
                 != {dummy_document['id']}):
             print('Add is incorrect, good')
             return
@@ -224,6 +249,10 @@ class Index:
 
         self.remove_document_from_index('100')
         index_after_remove = copy.deepcopy(self.index)
+        for i in index_after_remove.keys():
+            if index_after_remove[i] != index_before_add[i]:
+                print(index_after_remove[i])
+                print(index_before_add[i])
 
         if index_after_remove == index_before_add:
             print('Remove is correct')
@@ -242,19 +271,32 @@ class Index:
             type of index we want to store (documents, stars, genres, summaries)
             if None store tiered index
         """
-
+        # TODO :
         if not os.path.exists(path):
             os.makedirs(path)
 
         if index_type is None:
-            # TODO
-            pass
+            with open(os.path.join(path, 'TIERED_index.json'), 'w') as f:
+                json.dump(self.index, f, indent=4)
 
         if index_type not in self.index:
             raise ValueError('Invalid index type')
 
-        #         TODO
-        pass
+        if index_type == Indexes.DOCUMENTS.value:
+            with open(os.path.join(path, "DOCUMENTS_index.json"), 'w') as f:
+                json.dump(self.index[index_type], f, indent=4)
+
+        if index_type == Indexes.STARS.value:
+            with open(os.path.join(path, "STARS_index.json"), 'w') as f:
+                json.dump(self.index[index_type], f, indent=4)
+
+        if index_type == Indexes.GENRES.value:
+            with open(os.path.join(path, "GENRES_index.json"), 'w') as f:
+                json.dump(self.index[index_type], f, indent=4)
+
+        if index_type == Indexes.SUMMARIES.value:
+            with open(os.path.join(path, "SUMMARIES_index.json"), 'w') as f:
+                json.dump(self.index[index_type], f, indent=4)
 
     def load_index(self, path: str):
         """
@@ -265,9 +307,9 @@ class Index:
         path : str
             Path to load the file
         """
-
-        #         TODO
-        pass
+        # TODO :
+        with open(path, 'r') as f:
+            self.index = json.load(f)
 
     def check_if_index_loaded_correctly(self, index_type: str, loaded_index: dict):
         """
@@ -349,4 +391,26 @@ class Index:
             print('Indexing is wrong')
             return False
 
+
 # TODO: Run the class with needed parameters, then run check methods and finally report the results of check methods
+
+def main():
+    # TODO : urgent : need to fix the parameters : k, band, row
+    data = {}
+    with open('../LSHFakeData.json', 'r') as f:
+        data = json.load(f)
+    """with open("../IMDB_movies.json", "r") as f:
+        data1 = json.load(f)
+
+    data.extend(data1)"""
+
+    m = Index(data)
+    # TODO : note on these : changed to .get + removed the empty indexses
+    m.check_add_remove_is_correct()
+#    m.check_if_index_loaded_correctly()
+#    m.check_if_indexing_is_good()
+
+
+
+if __name__ == '__main__':
+    main()
