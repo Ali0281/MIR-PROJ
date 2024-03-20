@@ -19,11 +19,15 @@ class MinHashLSH:
         num_hashes : int
             Number of hashes for mini-hashing.
         """
+
+
         # TODO : note : i will use dict["summaries"] or .join of it
         # TODO : note : i used joined summaries for documents so i need to save doc id
+
         self.documents_ids = document_ids  # TODO : note : mine
 
         self.documents = documents
+
         self.num_hashes = num_hashes
         self.num_documents = len(documents)
         self.num_shingles = 0  # TODO : need to be updated
@@ -129,7 +133,7 @@ class MinHashLSH:
 
         return min_hash_signatures
 
-    def lsh_buckets(self, signature, bands=10, rows_per_band=10):
+    def lsh_buckets(self, signature, bands=20, rows_per_band=20):
         """
         Group documents into Locality-Sensitive Hashing (LSH) buckets based on Min-Hash signatures.
 
@@ -228,6 +232,12 @@ class MinHashLSH:
                         random_doc_id = first_doc_id
                         while random_doc_id == first_doc_id or random_doc_id == second_doc_id:
                             random_doc_id = random.randint(0, len(all_documents) - 1)
+
+
+                        ################
+
+                        random_doc_id = self.documents_ids[random_doc_id]
+                        ############################
                         random_shingled_doc = self.shingle_document(all_documents[random_doc_id], 2)
 
                         random_jaccard_score = self.jaccard_score(first_shingled_doc, random_shingled_doc)
@@ -246,13 +256,21 @@ def main():
     #TODO : urgent : need to fix the parameters : k, band, row
     with open('LSHFakeData.json', 'r') as f:
         data = json.load(f)
+    with open("IMDB_movies.json", "r") as f:
+        data1 = json.load(f)
+
+    data.extend(data1)
 
     ids = []
     docs = []
-    for d in data:
+    p = dict()
+    for i, d in enumerate(data):
         ids.append(d["id"])
         docs.append(" ".join(d["summaries"]))
+        p[d["id"]] = " ".join(d["summaries"])
     m = MinHashLSH(docs, ids, 400)
-    m.jaccard_similarity_test(m.perform_lsh(),docs)
+
+    m.jaccard_similarity_test(m.perform_lsh() ,p)
+
 if __name__ == '__main__':
     main()

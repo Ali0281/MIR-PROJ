@@ -30,10 +30,10 @@ class Index:
         dict
             The index of the documents based on the document ID.
         """
-
+        # TODO
         current_index = {}
-        #         TODO
-
+        for doc in self.preprocessed_documents:
+            current_index[doc["id"]] = doc
         return current_index
 
     def index_stars(self):
@@ -46,9 +46,15 @@ class Index:
             The index of the documents based on the stars. You should also store each terms' tf in each document.
             So the index type is: {term: {document_id: tf}}
         """
-
-        #         TODO
-        pass
+        # TODO : note : our tf will be 1 and 0 if absent
+        current_index = {}
+        for doc in self.preprocessed_documents:
+            for star in doc["stars"]:
+                if star in current_index:
+                    current_index[star][doc["id"]] = 1
+                else:
+                    current_index[star] = {doc["id"]: 1}
+        return current_index
 
     def index_genres(self):
         """
@@ -60,9 +66,15 @@ class Index:
             The index of the documents based on the genres. You should also store each terms' tf in each document.
             So the index type is: {term: {document_id: tf}}
         """
-
-        #         TODO
-        pass
+        # TODO : note : same as above
+        current_index = {}
+        for doc in self.preprocessed_documents:
+            for genre in doc["genres"]:
+                if genre in current_index:
+                    current_index[genre][doc["id"]] = 1
+                else:
+                    current_index[genre] = {doc["id"]: 1}
+        return current_index
 
     def index_summaries(self):
         """
@@ -74,10 +86,16 @@ class Index:
             The index of the documents based on the summaries. You should also store each terms' tf in each document.
             So the index type is: {term: {document_id: tf}}
         """
-
+        # TODO : note : will use word terms
         current_index = {}
-        #         TODO
-
+        for doc in self.preprocessed_documents:
+            for summary in doc["summaries"]:
+                summary = summary.split()
+                for w in summary:
+                    if w in current_index:
+                        current_index[w][doc["id"]] = current_index[w].get(doc["id"], 0) + summary.count(w)
+                    else:
+                        current_index[w] = {doc["id"]: summary.count(w)}
         return current_index
 
     def get_posting_list(self, word: str, index_type: str):
@@ -96,12 +114,14 @@ class Index:
         list
             posting list of the word (you should return the list of document IDs that contain the word and ignore the tf)
         """
-
+        posting_list = []
         try:
-            #         TODO
-            pass
-        except:
-            return []
+            if word not in self.index[index_type]: raise Exception("word not in index")
+            posting_list = list(self.index[index_type][word].keys())
+        except Exception as e:
+            print(f"couldn't get the posting list, exception : {e}")
+        finally:
+            return posting_list
 
     def add_document_to_index(self, document: dict):
         """
@@ -112,9 +132,31 @@ class Index:
         document : dict
             Document to add to all the indexes
         """
+        # TODO : id
+        self.index[Indexes.DOCUMENTS.value][document["id"]] = document
 
-        #         TODO
-        pass
+        # TODO : stars
+        for star in document["stars"]:
+            if star in self.index[Indexes.STARS.value]:
+                self.index[Indexes.STARS.value][star][document["id"]] = 1
+            else:
+                self.index[Indexes.STARS.value][star] = {document["id"]: 1}
+
+        # TODO : genres
+        for genre in document["genres"]:
+            if genre in self.index[Indexes.GENRES.value]:
+                self.index[Indexes.GENRES.value][genre][document["id"]] = 1
+            else:
+                self.index[Indexes.GENRES.value][genre] = {document["id"]: 1}
+
+        # TODO : summaries
+        for summary in document["summaries"]:
+            summary = summary.split()
+            for w in summary:
+                if w in self.index[Indexes.SUMMARIES.value]:
+                    self.index[Indexes.SUMMARIES.value][w][document["id"]] = self.index[Indexes.SUMMARIES.value][w].get(document["id"], 0) + summary.count(w)
+                else:
+                    self.index[Indexes.SUMMARIES.value][w] = {document["id"]: summary.count(w)}
 
     def remove_document_from_index(self, document_id: str):
         """
@@ -149,26 +191,31 @@ class Index:
             print('Add is incorrect, document')
             return
 
-        if (set(index_after_add[Indexes.STARS.value]['tim']).difference(set(index_before_add[Indexes.STARS.value]['tim']))
+        if (set(index_after_add[Indexes.STARS.value]['tim']).difference(
+                set(index_before_add[Indexes.STARS.value]['tim']))
                 != {dummy_document['id']}):
             print('Add is incorrect, tim')
             return
 
-        if (set(index_after_add[Indexes.STARS.value]['henry']).difference(set(index_before_add[Indexes.STARS.value]['henry']))
+        if (set(index_after_add[Indexes.STARS.value]['henry']).difference(
+                set(index_before_add[Indexes.STARS.value]['henry']))
                 != {dummy_document['id']}):
             print('Add is incorrect, henry')
             return
-        if (set(index_after_add[Indexes.GENRES.value]['drama']).difference(set(index_before_add[Indexes.GENRES.value]['drama']))
+        if (set(index_after_add[Indexes.GENRES.value]['drama']).difference(
+                set(index_before_add[Indexes.GENRES.value]['drama']))
                 != {dummy_document['id']}):
             print('Add is incorrect, drama')
             return
 
-        if (set(index_after_add[Indexes.GENRES.value]['crime']).difference(set(index_before_add[Indexes.GENRES.value]['crime']))
+        if (set(index_after_add[Indexes.GENRES.value]['crime']).difference(
+                set(index_before_add[Indexes.GENRES.value]['crime']))
                 != {dummy_document['id']}):
             print('Add is incorrect, crime')
             return
 
-        if (set(index_after_add[Indexes.SUMMARIES.value]['good']).difference(set(index_before_add[Indexes.SUMMARIES.value]['good']))
+        if (set(index_after_add[Indexes.SUMMARIES.value]['good']).difference(
+                set(index_before_add[Indexes.SUMMARIES.value]['good']))
                 != {dummy_document['id']}):
             print('Add is incorrect, good')
             return

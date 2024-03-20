@@ -870,21 +870,22 @@ class IMDbCrawler:
 
 
 def main():
-    imdb_crawler = IMDbCrawler(crawling_threshold=300)
+    imdb_crawler = IMDbCrawler(crawling_threshold=200)
 
-    imdb_crawler.read_from_file_as_json()
+    """imdb_crawler.read_from_file_as_json()
     print(len(imdb_crawler.added_ids))
     print(len(set(imdb_crawler.added_ids)))
     print(len(imdb_crawler.crawled))
     print(len(imdb_crawler.movies))
-    print(len(imdb_crawler.not_crawled))
+    print(len(imdb_crawler.not_crawled))"""
 
 
+    imdb_crawler.reset_files()
 
-    """#imdb_crawler.reset_files()
+
     imdb_crawler.read_from_file_as_json()
     imdb_crawler.start_crawling()
-    imdb_crawler.write_to_file_as_json()"""
+    imdb_crawler.write_to_file_as_json()
 
 
 if __name__ == '__main__':

@@ -1,8 +1,9 @@
+import re
 
 
 class Preprocessor:
 
-    def __init__(self, documents: list):
+    def __init__(self, documents: list, path):
         """
         Initialize the class.
 
@@ -14,6 +15,12 @@ class Preprocessor:
         # TODO
         self.documents = documents
         self.stopwords = []
+        try:
+            with open(path, 'r') as f:
+                for word in f:
+                    self.stopwords.append(word.strip().lower())
+        except Exception as e:
+            print(f"couldn't get the stopwords file, exception : {e}")
 
     def preprocess(self):
         """
@@ -58,9 +65,11 @@ class Preprocessor:
         str
             The text with links removed.
         """
-        patterns = [r'\S*http\S*', r'\S*www\S*', r'\S+\.ir\S*', r'\S+\.com\S*', r'\S+\.org\S*', r'\S*@\S*']
         # TODO
-        return
+        patterns = [r'\S*http\S*', r'\S*www\S*', r'\S+\.ir\S*', r'\S+\.com\S*', r'\S+\.org\S*', r'\S*@\S*']
+        for patt in patterns:
+            text = re.sub(patt, "", text)
+        return text
 
     def remove_punctuations(self, text: str):
         """
@@ -77,7 +86,7 @@ class Preprocessor:
             The text with punctuations removed.
         """
         # TODO
-        return
+        return re.sub(r'[^\w\s]', '', text)
 
     def tokenize(self, text: str):
         """
