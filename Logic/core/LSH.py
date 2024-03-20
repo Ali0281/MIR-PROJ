@@ -21,7 +21,7 @@ class MinHashLSH:
         """
         # TODO : note : i will use dict["summaries"] or .join of it
         # TODO : note : i used joined summaries for documents so i need to save doc id
-        self.documents_ids = document_ids # TODO : note : mine
+        self.documents_ids = document_ids  # TODO : note : mine
 
         self.documents = documents
         self.num_hashes = num_hashes
@@ -30,9 +30,15 @@ class MinHashLSH:
         self.hashes = None  # TODO : need to be updated
         self.presence = None  # TODO : need to be updated
         self.documents_shingled = None  # TODO : need to be done
-        self.shingles = set() # TODO : need to be updated
+        self.shingles = set()  # TODO : need to be updated
 
-    def shingle_document(self, document, k=2):
+    def update_shingles(self, _shingle):
+        self.shingles.update(_shingle)
+        self.presence = sorted(self.shingles)
+        self.num_shingles = len(self.shingles)
+
+
+    def shingle_document(self, document, k = 4):
         """
         Convert a document into a set of shingles.
 
@@ -48,18 +54,32 @@ class MinHashLSH:
         set
             A set of shingles.
         """
-        # TODO : note : i will shingle by word as the slides imply
+        """# TODO : note : i will shingle by word as the slides imply
         # TODO : note : using set as df doesnt matter
-        shingles = set()
+        shing = set()
         # TODO : note : remove not needed punctuations for pure words
         words = [word.strip(punctuation) for word in document.split()]
         for i in range(0, len(words) + 1 - k):
-            shingles.add(" ".join(words[i: i + k]))
-            # print(" ".join(words[i: i + k]))
+            shing.add(" ".join(words[i: i + k]))
 
-        self.shingles.update(shingles)
-        self.num_shingles = len(self.shingles)
-        return self.shingles
+        self.update_shingles(shing)
+
+        return shing
+
+
+        """
+        shing = set()
+        summary = " ".join([word.strip(punctuation) for word in document.split()])
+        #summary = document
+        for i in range(len(summary) + 1 - k):
+            shing.add(summary[i : i + k])
+        self.update_shingles(shing)
+        return shing
+
+    def shingle_all_documents(self, k = 4):
+        self.documents_shingled = dict()
+        for i in range(self.num_documents):
+            self.documents_shingled[self.documents_ids[i]] = self.shingle_document(self.documents[i], k)
 
     def build_characteristic_matrix(self):
         """
@@ -70,31 +90,23 @@ class MinHashLSH:
         numpy.ndarray
             The binary characteristic matrix.
         """
-        presence = set()
-        shingled_docs = []
-        for doc in self.documents:
-            shingled_docs.append(self.shingle_document(document=doc, k=2))
-            presence.update(shingled_docs[-1])
-
-        # TODO : note : for a definite ans
-        self.num_shingles = len(presence)
-        self.presence = sorted(presence)
+        self.shingle_all_documents(4)
 
         characteristic = np.zeros((self.num_documents, self.num_shingles))
-        for i, shingles in enumerate(shingled_docs):
-            for j, shingle in enumerate(presence):
-                if shingle in shingles:
+        for i, doc_id in enumerate(self.documents_ids):
+            for j, shingle in enumerate(self.presence):
+                if shingle in self.documents_shingled[doc_id]:
                     characteristic[i, j] = 1
 
         return characteristic
 
     def create_hashes(self):
         # TODO : note : i will use this as different hashes
-        possible_hashes = list(itertools.permutations(range(self.num_shingles)))
-
-        print(self.num_shingles)
-        print(self.num_hashes)
-        self.hashes = random.sample(possible_hashes, self.num_hashes)
+        perm = list(range(self.num_shingles))
+        self.hashes = []
+        for i in range(self.num_hashes):
+            np.random.shuffle(perm)
+            self.hashes.append(list(perm))
 
     def min_hash_signature(self):
         """
@@ -105,15 +117,15 @@ class MinHashLSH:
         numpy.ndarray
             The Min-Hash signatures matrix.
         """
-        self.create_hashes()
         characteristic = self.build_characteristic_matrix()
         min_hash_signatures = np.full((self.num_hashes, self.num_documents), np.inf)
-
+        self.create_hashes()
         for i in range(self.num_documents):
             for j in range(self.num_shingles):
                 if characteristic[i, j] == 1:
                     for index, perm in enumerate(self.hashes):
-                        min_hash_signatures[index, i] = min(min_hash_signatures[index, i], perm[i])
+                        min_hash_signatures[index, i] = min(min_hash_signatures[index, i], perm[j])
+
 
         return min_hash_signatures
 
@@ -141,10 +153,12 @@ class MinHashLSH:
 
         for i in range(bands):
             for j in range(self.num_documents):
-                slice_ = signature[rows_per_band * i: rows_per_band * (i + 1), j:j+1]
-                hashed = hash(tuple(slice.flatten()))
-                if hashed in buckets: buckets[hashed].append(self.documents_id[j])
-                else : buckets[hashed] = []
+                slice_ = signature[rows_per_band * i: rows_per_band * (i + 1), j:j + 1]
+                hashed = hash(tuple(slice_.flatten()))
+                if hashed in buckets:
+                    buckets[hashed].append(self.documents_ids[j])
+                else:
+                    buckets[hashed] = [self.documents_ids[j]]
 
         return buckets
 
@@ -176,7 +190,7 @@ class MinHashLSH:
         float
             Jaccard score.
         """
-        if len(first_set.union(second_set)) == 0 : return 0
+        if len(first_set.union(second_set)) == 0: return 0
         return len(first_set.intersection(second_set)) / len(first_set.union(second_set))
 
     def jaccard_similarity_test(self, buckets, all_documents):
@@ -229,7 +243,7 @@ class MinHashLSH:
 
 
 def main():
-
+    #TODO : urgent : need to fix the parameters : k, band, row
     with open('LSHFakeData.json', 'r') as f:
         data = json.load(f)
 
@@ -237,10 +251,8 @@ def main():
     docs = []
     for d in data:
         ids.append(d["id"])
-        docs.append("\n".join(d["summaries"]))
-    m = MinHashLSH(docs, ids, 10)
-    print(m.perform_lsh())
-
-
+        docs.append(" ".join(d["summaries"]))
+    m = MinHashLSH(docs, ids, 400)
+    m.jaccard_similarity_test(m.perform_lsh(),docs)
 if __name__ == '__main__':
     main()
