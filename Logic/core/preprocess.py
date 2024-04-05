@@ -1,9 +1,14 @@
+import json
 import re
+import nltk
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 
 
 class Preprocessor:
+    # TODO : if you had problem using nltk
+    # nltk.download('punkt')
+    # nltk.download('wordnet')
 
     def __init__(self, documents: list, path):
         """
@@ -17,17 +22,19 @@ class Preprocessor:
         # TODO
         self.documents = documents
         self.stopwords = []
+        self.lemmatized_stopwords = []
         self.lemmatizer = WordNetLemmatizer()
         self.tokenizer = word_tokenize
         try:
             with open(path, 'r') as f:
                 for word in f:
                     self.stopwords.append(word.strip().lower())
+                self.lemmatized_stopwords = [self.normalize(w) for w in self.stopwords]
         except Exception as e:
             print(f"couldn't get the stopwords file, exception : {e}")
 
     def preprocess_text(self, text):
-        return self.remove_stopwords(self.remove_punctuations(self.remove_links(self.normalize(text))))
+        return " ".join(self.remove_stopwords(self.remove_punctuations(self.remove_links(self.normalize(text)))))
 
     def preprocess(self):
         """
@@ -54,7 +61,7 @@ class Preprocessor:
 
             preprocessed_reviews = []
             for review in doc["reviews"]:
-                preprocessed_reviews.append(self.preprocess_text(review))
+                preprocessed_reviews.append(self.preprocess_text(review[0]))  # TODO : do i need to use the score?
             doc["reviews"] = preprocessed_reviews
 
     def normalize(self, text: str):
@@ -72,7 +79,7 @@ class Preprocessor:
             The normalized text.
         """
         # TODO
-        return [self.lemmatizer.lemmatize(w.lower) for w in self.tokenize(text)]
+        return " ".join([self.lemmatizer.lemmatize(w.lower()) for w in self.tokenize(text)])
 
     def remove_links(self, text: str):
         """
@@ -143,4 +150,20 @@ class Preprocessor:
             The list of words with stopwords removed.
         """
         # TODO
-        return " ".join([word for word in self.tokenize(text) if word not in self.stopwords])
+        filter_1 = [word for word in self.tokenize(text) if word not in self.stopwords]
+        # TODO : note : i added another filter to lemmatize the stopwords and do the filter
+        return [word for word in filter_1 if word not in self.lemmatized_stopwords]
+        # return  filter_1
+
+
+def main():
+    with open("IMDB_movies.json", "r") as f:
+        data = json.load(f)
+    print(data[0]["first_page_summary"])
+    pre = Preprocessor(data, "stopwords.txt")
+    pre.preprocess()
+    #print(pre.documents[:5])
+    print(pre.documents[0]["first_page_summary"])
+
+if __name__ == '__main__':
+    main()
