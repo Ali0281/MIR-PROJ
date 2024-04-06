@@ -1,6 +1,7 @@
 from typing import Dict, List
-from core.search import SearchEngine
-from core.spell_correction import SpellCorrection
+
+from Logic.core.spell_correction import SpellCorrection
+from Logic.core.search import SearchEngine
 
 movies_dataset = None  # TODO
 search_engine = SearchEngine()
@@ -58,7 +59,8 @@ def search(
     list
     Retrieved documents with snippet
     """
-    weights = ...  # TODO
+    # TODO : note : ??
+    # weights =
     return search_engine.search(
         query, method, weights, max_results=max_result_count, safe_ranking=True
     )
@@ -81,7 +83,8 @@ def get_movie_by_id(id: str, movies_dataset: List[Dict[str, str]]) -> Dict[str, 
     dict
         The movie with the given id
     """
-    result = movies_dataset.get(
+
+    """result = movies_dataset.get(
         id,
         {
             "Title": "This is movie's title",
@@ -91,7 +94,12 @@ def get_movie_by_id(id: str, movies_dataset: List[Dict[str, str]]) -> Dict[str, 
             "Genres": ["Drama", "Crime"],
             "Image_URL": "https://m.media-amazon.com/images/M/MV5BNDE3ODcxYzMtY2YzZC00NmNlLWJiNDMtZDViZWM2MzIxZDYwXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_.jpg",
         },
-    )
+    )"""
+    result = dict()
+    for document in movies_dataset:
+        if document["id"] == id :
+            result = document
+            break
 
     result["Image_URL"] = (
         "https://m.media-amazon.com/images/M/MV5BNDE3ODcxYzMtY2YzZC00NmNlLWJiNDMtZDViZWM2MzIxZDYwXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_.jpg"  # a default picture for selected movies

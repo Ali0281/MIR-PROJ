@@ -1,14 +1,13 @@
 import json
 import re
-import nltk
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 
 
 class Preprocessor:
     # TODO : if you had problem using nltk
-    # nltk.download('punkt')
-    # nltk.download('wordnet')
+    #nltk.download('punkt')
+    #nltk.download('wordnet')
 
     def __init__(self, documents: list, path):
         """

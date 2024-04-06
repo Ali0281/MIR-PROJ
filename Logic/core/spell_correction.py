@@ -2,8 +2,6 @@ import heapq
 import json
 import re
 
-from Logic.core.preprocess import Preprocessor
-
 
 class SpellCorrection:
     def __init__(self, all_documents):

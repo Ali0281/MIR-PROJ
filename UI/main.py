@@ -1,11 +1,14 @@
+from enum import Enum
+
 import streamlit as st
 import sys
+import time
+import random
+
 
 sys.path.append("../")
+
 from Logic import utils
-import time
-from enum import Enum
-import random
 from Logic.core.snippet import Snippet
 
 snippet_obj = Snippet(

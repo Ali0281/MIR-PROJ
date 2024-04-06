@@ -1,5 +1,7 @@
-from indexes_enum import Indexes,Index_types
 import json
+from Logic.core.indexer.indexes_enum import Indexes, Index_types
+
+
 class Index_reader:
     def __init__(self,path: str, index_name: Indexes, index_type: Index_types = None):
         """
