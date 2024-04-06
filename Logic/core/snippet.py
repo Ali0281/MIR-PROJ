@@ -1,3 +1,5 @@
+import json
+
 from nltk.tokenize import word_tokenize
 
 
@@ -64,26 +66,60 @@ class Snippet:
         not_exist_words : list
             Words in the query which don't exist in the doc.
         """
-        # TODO
-        final_snippet = ""
-        not_exist_words = []
-        query, doc = query.lower(), word_tokenize(doc.lower())
-        for w in self.remove_stop_words_from_query(query).split():
-            if w not in doc: not_exist_words.append(w)
-            if w not in doc: continue
-            indexes = []
-            for i in range(len(doc)):
-                if doc[i] == w: indexes.append(i)
+        # TODO : note : i will iterate through the text and check every key word to avoid duplicate texts and support the guide rules
+        # TODO : note on implementation : if 1 2 3 4 5  is the string and we want 1 and 5 with 2 near words : 3 will appear two times, so for convenience i return ... ***1*** 2 3 4 ***5*** ...
 
-            for i in indexes:
-                start, end = i - self.number_of_words_on_each_side, i + self.number_of_words_on_each_side
-                if start < 0: start = 0
-                if end >= len(doc) : end = len(doc) - 1
-                snippet = doc[start:end]
+        final_snippet = "... "
+        words, document = self.remove_stop_words_from_query(query.lower()).split(), word_tokenize(doc.lower())
+        not_exist_words = words.copy()
+        penalty = 0
+        for i, w in enumerate(document):
+            if penalty > 0:
+                penalty -= 1
+                continue
+            if w not in words: continue
 
-                for i in range(len(snippet)):
-                    if snippet[i] == w : snippet[i] = f"***{snippet[i]}***"
+            start, end = i - self.number_of_words_on_each_side, i + self.number_of_words_on_each_side + 1
+            if start < 0: start = 0
+            if end >= len(document): end = len(document)
 
-                final_snippet += " ".join(snippet) + "..."
+            iter = start
+            while iter < end:
+                if document[iter] in words:
+                    end = max(end, iter + self.number_of_words_on_each_side * 2 + 1)
+                    if end >= len(document): end = len(document)
+                iter += 1
+            end -= self.number_of_words_on_each_side
+            if end < 0: end = 0
+            penalty = end - i
+
+            snippet = document[start:end]
+            for i in range(len(snippet)):
+                if snippet[i] in words:
+                    if snippet[i] in not_exist_words: not_exist_words.remove(snippet[i])
+                    snippet[i] = f"***{snippet[i]}***"
+
+            final_snippet += " ".join(snippet) + " ... "
 
         return final_snippet, not_exist_words
+
+
+def main():
+    with open("IMDB_movies.json", "r") as f:
+        data = json.load(f)
+
+    for i in data:
+        if i["id"] == "tt0050083":
+            _12_angry_men = i
+            break
+    print(_12_angry_men["summaries"][2])
+    s = Snippet()
+    snippet, missing = s.find_snippet(_12_angry_men["summaries"][2], "alleged juror father jurors are the random")
+    print("missing : ", missing)
+    print("snippet : ", snippet)
+
+    # TODO ; note : code is running properly , if confused by some details check the note on find_snippet
+
+
+if __name__ == '__main__':
+    main()
