@@ -2,6 +2,8 @@ import time
 import os
 import json
 import copy
+
+from Logic.core.preprocess import Preprocessor
 from indexes_enum import Indexes
 
 
@@ -10,7 +12,7 @@ class Index:
         """
         Create a class for indexing.
         """
-
+        # self.load_index("indexes.json")
         self.preprocessed_documents = preprocessed_documents
 
         self.index = {
@@ -19,6 +21,8 @@ class Index:
             Indexes.GENRES.value: self.index_genres(),
             Indexes.SUMMARIES.value: self.index_summaries(),
         }
+
+        self.store_all()
 
     def index_documents(self):
         """
@@ -47,13 +51,24 @@ class Index:
             So the index type is: {term: {document_id: tf}}
         """
         # TODO : note : our tf will be 1 and 0 if absent
-        current_index = {}
+        """current_index = {}
         for doc in self.preprocessed_documents:
             for star in doc["stars"]:
                 if star in current_index:
                     current_index[star][doc["id"]] = 1
                 else:
                     current_index[star] = {doc["id"]: 1}
+        return current_index"""
+
+        current_index = {}
+        for doc in self.preprocessed_documents:
+            for star in doc["stars"]:
+                for w in star.split():
+                    # w = w.lower()
+                    if w in current_index:
+                        current_index[w][doc["id"]] = current_index[w].get(doc["id"], 0) + 1
+                    else:
+                        current_index[w] = {doc["id"]: 1}
         return current_index
 
     def index_genres(self):
@@ -70,6 +85,7 @@ class Index:
         current_index = {}
         for doc in self.preprocessed_documents:
             for genre in doc["genres"]:
+                # genre = genre.lower()
                 if genre in current_index:
                     current_index[genre][doc["id"]] = 1
                 else:
@@ -159,6 +175,8 @@ class Index:
                 else:
                     self.index[Indexes.SUMMARIES.value][w] = {document["id"]: summary.count(w)}
 
+        self.store_all()
+
     def remove_document_from_index(self, document_id: str):
         """
         Remove a document from all the indexes
@@ -194,6 +212,8 @@ class Index:
                 if len(value) == 0:
                     summary_keys_to_remove.append(key)
         for key in summary_keys_to_remove: del self.index[Indexes.SUMMARIES.value][key]
+
+        self.store_all()
 
     def check_add_remove_is_correct(self):
         """
@@ -275,10 +295,6 @@ class Index:
         if not os.path.exists(path):
             os.makedirs(path)
 
-        if index_type is None:
-            with open(os.path.join(path, 'TIERED_index.json'), 'w') as f:
-                json.dump(self.index, f, indent=4)
-
         if index_type not in self.index:
             raise ValueError('Invalid index type')
 
@@ -327,8 +343,21 @@ class Index:
         bool
             True if index is loaded correctly, False otherwise
         """
+        # return self.index[index_type] == loaded_index
+        # TODO : note : changed this because it caused some problems while the code being correct
+        # TODO : note : my code works with both checkers now !
+        local = self.index.get(index_type, {})
 
-        return self.index[index_type] == loaded_index
+        if set(loaded_index.keys()) != set(local.keys()):
+            print(f"Key mismatch for {index_type} index")
+            return False
+
+        for key in loaded_index.keys():
+            if loaded_index[key] != local[key]:
+                print(f"Value mismatch for key {key} in {index_type} index")
+                return False
+
+        return True
 
     def check_if_indexing_is_good(self, index_type: str, check_word: str = 'good'):
         """
@@ -355,10 +384,38 @@ class Index:
             if index_type not in document or document[index_type] is None:
                 continue
 
-            for field in document[index_type]:
+            # TODO : note : this type of check is not reliable !
+            # TODO : example : roberto cant be in robert term !!
+            # TODO : note : so i will be changing it
+            """for field in document[index_type]:
                 if check_word in field:
                     docs.append(document['id'])
+                    break"""
+            if index_type == "documents":
+                if check_word == document["id"]:
+                    docs.append(document)
                     break
+
+            elif index_type == "stars":
+                for star in document["stars"]:
+                    # star = star.lower()
+                    for field in star.split():
+                        if check_word == field:
+                            docs.append(document['id'])
+                            break
+
+            elif index_type == "genres":
+                for field in document["genres"]:
+                    if check_word == field:
+                        docs.append(document['id'])
+                        break
+
+            elif index_type == "summaries":
+                for summary in document["summaries"]:
+                    for field in summary.split():
+                        if check_word == field:
+                            docs.append(document['id'])
+                            break
 
             # if we have found 3 documents with the word, we can break
             if len(docs) == 3:
@@ -378,10 +435,15 @@ class Index:
         print('Brute force time: ', brute_force_time)
         print('Implemented time: ', implemented_time)
 
+        # TOOD : note : my testing code
+        #print(docs)
+        #print(posting_list)
+
         if set(docs).issubset(set(posting_list)):
             print('Indexing is correct')
 
-            if implemented_time < brute_force_time:
+            # TODO : note : added the or parts so if the brute force is 0 we wont get a problem
+            if implemented_time < brute_force_time or brute_force_time == 0:
                 print('Indexing is good')
                 return True
             else:
@@ -391,25 +453,60 @@ class Index:
             print('Indexing is wrong')
             return False
 
+    def store_all(self):
+        self.store_index("indexes", "documents")
+        self.store_index("indexes", "stars")
+        self.store_index("indexes", "genres")
+        self.store_index("indexes", "summaries")
+
 
 # TODO: Run the class with needed parameters, then run check methods and finally report the results of check methods
 
 def main():
-    # TODO : urgent : need to fix the parameters : k, band, row
-    data = {}
-    with open('../LSHFakeData.json', 'r') as f:
+    with open("../IMDB_movies.json", "r") as f:
         data = json.load(f)
-    """with open("../IMDB_movies.json", "r") as f:
-        data1 = json.load(f)
 
-    data.extend(data1)"""
+    pre = Preprocessor(data, "../stopwords.txt")
+    pre.preprocess()
 
-    m = Index(data)
-    # TODO : note on these : changed to .get + removed the empty indexses
+    m = Index(pre.documents)
+
+    # TODO : note : used .get instead
+    # TODO : note : removed the empty indexses
     m.check_add_remove_is_correct()
-#    m.check_if_index_loaded_correctly()
-#    m.check_if_indexing_is_good()
+    print("checked add remove successfully ... \n")
+    m.index_stars()
 
+    with open("indexes/DOCUMENTS_index.json", "r") as f:
+        documents = json.load(f)
+
+    with open("indexes/GENRES_index.json", "r") as f:
+        genres = json.load(f)
+
+    with open("indexes/STARS_index.json", "r") as f:
+        stars = json.load(f)
+
+    with open("indexes/SUMMARIES_index.json", "r") as f:
+        summaries = json.load(f)
+
+    print("documents test : ", m.check_if_index_loaded_correctly("documents", documents))
+    print("stars test : ", m.check_if_index_loaded_correctly("stars", stars))
+    print("genres test : ", m.check_if_index_loaded_correctly("genres", genres))
+    print("summaries test : ", m.check_if_index_loaded_correctly("summaries", summaries))
+    print("checked index loading successfully ... \n")
+
+    print("checking documents on id tt0110912 : ", m.check_if_indexing_is_good("documents", "tt0110912"), "\n")
+    print("checking documents on id tt0084787 : ", m.check_if_indexing_is_good("documents", "tt0084787"), "\n")
+
+    print("checking stars on word Robert : ", m.check_if_indexing_is_good("stars", "Robert"), "\n")
+    print("checking stars on word Kevin : ", m.check_if_indexing_is_good("stars", "Kevin"), "\n")
+
+    print("checking genres on word War : ", m.check_if_indexing_is_good("genres", "War"), "\n")
+    print("checking genres on word Drama : ", m.check_if_indexing_is_good("genres", "Drama"), "\n")
+
+    print("checking summaries on word lake : ", m.check_if_indexing_is_good("summaries", "lake"), "\n")
+    print("checking summaries on word badge : ", m.check_if_indexing_is_good("summaries", "badge"), "\n")
+    print("checked indexing successfully ... \n")
 
 
 if __name__ == '__main__':
