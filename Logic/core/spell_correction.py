@@ -1,4 +1,8 @@
 import heapq
+import json
+import re
+
+from Logic.core.preprocess import Preprocessor
 
 
 class SpellCorrection:
@@ -11,8 +15,16 @@ class SpellCorrection:
         all_documents : list of str
             The input documents.
         """
+        # TODO : note : clear the text from : ; and such
+        for index, document in enumerate(all_documents):
+            all_documents[index] = re.sub(r'\b[^a-zA-Z0-9\']+\b', ' ', document)
         # TODO : note : can get rid of lowers or add or ...
         self.all_shingled_words, self.word_counter = self.shingling_and_counting(all_documents)
+        # TODO : note : will add stopwords to skip them as we had the data preprocessed
+        self.stopwords = []
+        with open("stopwords.txt", 'r') as f:
+            for word in f:
+                self.stopwords.append(word.strip().lower())
 
     def shingle_word(self, word, k=2):
         """
@@ -113,26 +125,28 @@ class SpellCorrection:
         self.all_shingled_words[word] = self.all_shingled_words.get(word, self.shingle_word(word))
         shingles = self.all_shingled_words[word]
         for key, value in self.all_shingled_words.items():
-            if key == word: continue
             score = self.jaccard_score(shingles, value)
             heapq.heappush(top5_candidates, (score, key, value))
-            if len(top5_candidates) > 5: heapq.heappop(top5_candidates)
+            # TODO : note : giving out 6 candidates one probably being the same word
+            if len(top5_candidates) > 6: heapq.heappop(top5_candidates)
         return [word for score, word, shingles in sorted(top5_candidates)][::-1]
 
     def word_spell_checker(self, word):
         self.all_shingled_words[word] = self.all_shingled_words.get(word, self.shingle_word(word))
 
         nearest_words = self.find_nearest_words(word)
+        nearest_words.append(word)
         scores = []
         tf = [self.word_counter.get(n, 0) for n in nearest_words]
         normalized_tf = [x / max(tf) for x in tf]
-
-        for n in nearest_words:
+        for index, n in enumerate(nearest_words):
             j_score = self.jaccard_score(self.all_shingled_words[word], self.all_shingled_words[n])
-            scores.append((n, j_score * normalized_tf[n]))
+            scores.append((n, j_score * normalized_tf[index]))
 
-        if len(scores) > 0 : return max(scores, key=lambda x: x[1])[0]
-        else : return word
+        if len(scores) > 0:
+            return max(scores, key=lambda x: x[1])[0]
+        else:
+            return word
 
     def spell_check(self, query):
         """
@@ -151,5 +165,33 @@ class SpellCorrection:
         # TODO
         query = query.lower()
         estimated_query = ""
-        for w in query.split(): estimated_query += self.word_spell_checker(w) + " "
+        for w in query.split():
+            if w not in self.stopwords:
+                estimated_query += self.word_spell_checker(w) + " "
+            else:
+                estimated_query += w + " "
+
         return estimated_query.strip()
+
+
+def main():
+    with open("IMDB_movies.json", "r") as f:
+        data = json.load(f)
+
+    # TODO : note : in case you needed a pre proccessed input, but it seems to work poorly as the pre process proceeds to remove stopwords and such
+    #pre = Preprocessor(data, "stopwords.txt")
+    #pre.preprocess()
+    #data = pre.documents
+
+    documents_as_string = []
+    # TODO : note : so we are dealing with a list of strings as input of the class
+    for doc in data:
+        # TODO : note : i will just use the summaries / reviews / synopsis as they have the most text available
+        documents_as_string.append(
+            " ".join(doc["summaries"]) + " ".join([review[0] for review in doc["reviews"]]) + " ".join(doc["synopsis"]))
+    s = SpellCorrection(documents_as_string)
+    print(s.spell_check("chec thi mis spel"))
+
+
+if __name__ == '__main__':
+    main()
