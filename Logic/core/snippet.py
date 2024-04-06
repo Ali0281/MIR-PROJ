@@ -112,9 +112,12 @@ def main():
         if i["id"] == "tt0050083":
             _12_angry_men = i
             break
-    print(_12_angry_men["summaries"][2])
+    text = _12_angry_men["summaries"][2]
+    query = "alleged juror father jurors are the random"
+    print("text : ", text)
     s = Snippet()
-    snippet, missing = s.find_snippet(_12_angry_men["summaries"][2], "alleged juror father jurors are the random")
+    print("query : ", query, "\n")
+    snippet, missing = s.find_snippet(text, query)
     print("missing : ", missing)
     print("snippet : ", snippet)
 
