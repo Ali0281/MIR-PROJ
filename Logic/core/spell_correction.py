@@ -125,10 +125,10 @@ class SpellCorrection:
         self.all_shingled_words[word] = self.all_shingled_words.get(word, self.shingle_word(word))
         shingles = self.all_shingled_words[word]
         for key, value in self.all_shingled_words.items():
-            score = self.jaccard_score(shingles, value)
-            heapq.heappush(top5_candidates, (score, key, value))
+            heapq.heappush(top5_candidates, (self.jaccard_score(shingles, value), key, value))
             # TODO : note : giving out 6 candidates one probably being the same word
             if len(top5_candidates) > 6: heapq.heappop(top5_candidates)
+        #print(top5_candidates)
         return [word for score, word, shingles in sorted(top5_candidates)][::-1]
 
     def word_spell_checker(self, word):
@@ -142,6 +142,7 @@ class SpellCorrection:
         for index, n in enumerate(nearest_words):
             j_score = self.jaccard_score(self.all_shingled_words[word], self.all_shingled_words[n])
             scores.append((n, j_score * normalized_tf[index]))
+            #print((n, j_score * normalized_tf[index]))
 
         if len(scores) > 0:
             return max(scores, key=lambda x: x[1])[0]
