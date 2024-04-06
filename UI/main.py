@@ -6,7 +6,7 @@ import time
 import random
 
 
-sys.path.append("../")
+sys.path.append("C:/Users/HSM/PycharmProjects/MIR-PROJ-")
 
 from Logic import utils
 from Logic.core.snippet import Snippet

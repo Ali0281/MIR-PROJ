@@ -299,19 +299,19 @@ class Index:
             raise ValueError('Invalid index type')
 
         if index_type == Indexes.DOCUMENTS.value:
-            with open(os.path.join(path, "DOCUMENTS_index.json"), 'w') as f:
+            with open(os.path.join(path, "documents_index.json"), 'w') as f:
                 json.dump(self.index[index_type], f, indent=4)
 
         if index_type == Indexes.STARS.value:
-            with open(os.path.join(path, "STARS_index.json"), 'w') as f:
+            with open(os.path.join(path, "stars_index.json"), 'w') as f:
                 json.dump(self.index[index_type], f, indent=4)
 
         if index_type == Indexes.GENRES.value:
-            with open(os.path.join(path, "GENRES_index.json"), 'w') as f:
+            with open(os.path.join(path, "genres_index.json"), 'w') as f:
                 json.dump(self.index[index_type], f, indent=4)
 
         if index_type == Indexes.SUMMARIES.value:
-            with open(os.path.join(path, "SUMMARIES_index.json"), 'w') as f:
+            with open(os.path.join(path, "summaries_index.json"), 'w') as f:
                 json.dump(self.index[index_type], f, indent=4)
 
     def load_index(self, path: str):
@@ -454,10 +454,10 @@ class Index:
             return False
 
     def store_all(self):
-        self.store_index("indexes", "documents")
-        self.store_index("indexes", "stars")
-        self.store_index("indexes", "genres")
-        self.store_index("indexes", "summaries")
+        self.store_index("index", "documents")
+        self.store_index("index", "stars")
+        self.store_index("index", "genres")
+        self.store_index("index", "summaries")
 
 
 # TODO: Run the class with needed parameters, then run check methods and finally report the results of check methods
@@ -477,16 +477,16 @@ def main():
     print("checked add remove successfully ... \n")
     m.index_stars()
 
-    with open("indexes/DOCUMENTS_index.json", "r") as f:
+    with open("indexes/documents_index.json", "r") as f:
         documents = json.load(f)
 
-    with open("indexes/GENRES_index.json", "r") as f:
+    with open("indexes/genres_index.json", "r") as f:
         genres = json.load(f)
 
-    with open("indexes/STARS_index.json", "r") as f:
+    with open("indexes/stars_index.json", "r") as f:
         stars = json.load(f)
 
-    with open("indexes/SUMMARIES_index.json", "r") as f:
+    with open("indexes/summaries_index.json", "r") as f:
         summaries = json.load(f)
 
     print("documents test : ", m.check_if_index_loaded_correctly("documents", documents))

@@ -30,13 +30,14 @@ class Index_reader:
         dict
             The index.
         """
+        # TODO : note : i will work with absolute path for now
         absolute_path = self.path + self.index_name.value
-        
+        absolute_path = "C:/Users/HSM/PycharmProjects/MIR-PROJ-/Logic/core/indexer/index/" + self.index_name.value
         if self.index_type != None:
             absolute_path = absolute_path + "_" + self.index_type.value
 
         absolute_path = absolute_path + "_index.json"
-        
+
         with open(absolute_path, 'r') as file:
             return json.load(file)
         

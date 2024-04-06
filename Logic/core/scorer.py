@@ -66,8 +66,11 @@ class Scorer:
         idf = self.idf.get(term, None)
         if idf is None:
             # TODO
-            pass
-        return idf
+            df = len(self.index.get(term, {}))
+            # TODO : note : can change this
+            if df > 0 : idf = np.log((self.N - df + 0.5) / (df + 0.5))
+
+        return 0 if idf is None else idf
     
     def get_query_tfs(self, query):
         """
@@ -83,9 +86,12 @@ class Scorer:
         dict
             A dictionary of the term frequencies of the terms in the query.
         """
-        
         #TODO
-
+        result = {}
+        for term in query:
+            if term in result : result[term] += 1
+            else: result[term] = 1
+        return result
 
     def compute_scores_with_vector_space_model(self, query, method):
         """
@@ -103,9 +109,12 @@ class Scorer:
         dict
             A dictionary of the document IDs and their scores.
         """
-
         # TODO
-        pass
+        result = {}
+        qtf = self.get_query_tfs(query)
+        for document in self.get_list_of_documents(query):
+            result[document] = self.get_vector_space_model_score(query, qtf, document, method.split(".")[0], method.split(".")[1])
+        return result
 
     def get_vector_space_model_score(self, query, query_tfs, document_id, document_method, query_method):
         """
