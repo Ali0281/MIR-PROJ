@@ -64,7 +64,7 @@ class Index:
         for doc in self.preprocessed_documents:
             for star in doc["stars"]:
                 for w in star.split():
-                    # w = w.lower()
+                    w = w.lower()
                     if w in current_index:
                         current_index[w][doc["id"]] = current_index[w].get(doc["id"], 0) + 1
                     else:
@@ -85,7 +85,7 @@ class Index:
         current_index = {}
         for doc in self.preprocessed_documents:
             for genre in doc["genres"]:
-                # genre = genre.lower()
+                genre = genre.lower()
                 if genre in current_index:
                     current_index[genre][doc["id"]] = 1
                 else:

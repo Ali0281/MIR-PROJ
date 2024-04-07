@@ -1,6 +1,7 @@
 from Logic.core.indexer.index_reader import Index_reader
 from Logic.core.indexer.indexes_enum import Indexes, Index_types
 from Logic.core.preprocess import Preprocessor
+from Logic.core.scorer import Scorer
 
 
 class SearchEngine:
@@ -27,7 +28,7 @@ class SearchEngine:
         }
         self.metadata_index = Index_reader(path, Indexes.DOCUMENTS, Index_types.METADATA)
 
-    def search(self, query, method, weights, safe_ranking = True, max_results=10):
+    def search(self, query, method, weights, safe_ranking=True, max_results=10):
         """
         searches for the query in the indexes.
 
@@ -51,7 +52,7 @@ class SearchEngine:
             A list of tuples containing the document IDs and their scores sorted by their scores.
         """
 
-        preprocessor = Preprocessor([query])
+        preprocessor = Preprocessor([query], "stopwords.txt")
         query = preprocessor.preprocess()[0].split()
 
         scores = {}
@@ -63,7 +64,7 @@ class SearchEngine:
         final_scores = {}
 
         self.aggregate_scores(weights, scores, final_scores)
-        
+
         result = sorted(final_scores.items(), key=lambda x: x[1], reverse=True)
         if max_results is not None:
             result = result[:max_results]
@@ -84,7 +85,12 @@ class SearchEngine:
             The final scores of the documents.
         """
         # TODO
-        pass
+        for doc_id, score_dict in scores.items():
+            final_score = 0
+            print(score_dict)
+            for field, score in score_dict.items():
+                final_score += score * weights[field]
+            final_scores[doc_id] = final_score
 
     def find_scores_with_unsafe_ranking(self, query, method, weights, max_results, scores):
         """
@@ -105,8 +111,14 @@ class SearchEngine:
         """
         for field in weights:
             for tier in ["first_tier", "second_tier", "third_tier"]:
-                #TODO
-                pass
+                # TODO
+                tier_index = self.tiered_index[field][tier]
+                scorer = Scorer(tier_index, self.metadata_index.get_number_of_documents())
+                scores_for_tier = scorer.compute_scores_with_vector_space_model(query, method)
+                for doc_id, score in scores_for_tier.items():
+                    if doc_id not in scores:
+                        scores[doc_id] = {}
+                    scores[doc_id][field] = score
 
     def find_scores_with_safe_ranking(self, query, method, weights, scores):
         """
@@ -123,10 +135,14 @@ class SearchEngine:
         scores : dict
             The scores of the documents.
         """
-
         for field in weights:
-            #TODO
-            pass
+            # TODO
+            scorer = Scorer(self.document_indexes[field], self.metadata_index.get_index()["document_count"])
+            scores_for_field = scorer.compute_scores_with_vector_space_model(query, method)
+            for doc_id, score in scores_for_field.items():
+                if doc_id not in scores:
+                    scores[doc_id] = {}
+                scores[doc_id][field] = score
 
     def merge_scores(self, scores1, scores2):
         """
@@ -144,8 +160,14 @@ class SearchEngine:
         dict
             The merged dictionary of scores.
         """
-
-        #TODO
+        # TODO
+        merged_scores = {}
+        for doc_id in scores1:
+            merged_scores[doc_id] = scores1[doc_id] + scores2.get(doc_id, 0)
+        for doc_id in scores2:
+            if doc_id not in scores1:
+                merged_scores[doc_id] = scores2[doc_id]
+        return merged_scores
 
 
 if __name__ == '__main__':

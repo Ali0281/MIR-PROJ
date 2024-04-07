@@ -44,6 +44,12 @@ class Preprocessor:
         List[str]
             The preprocessed documents.
         """
+        if type(self.documents[0]) != type(dict):
+            res = []
+            for doc in self.documents:
+                res.append(self.preprocess_text(doc))
+            return res
+
         for doc in self.documents:
             # TODO : note : only give attention to <first_page_summary>, <summaries>, <synopsis>, <reviews>
             doc["first_page_summary"] = self.preprocess_text(doc["first_page_summary"])
