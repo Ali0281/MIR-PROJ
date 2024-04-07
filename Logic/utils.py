@@ -1,9 +1,14 @@
+import json
 from typing import Dict, List
 
+from Logic.core.indexer.indexes_enum import Indexes
 from Logic.core.spell_correction import SpellCorrection
 from Logic.core.search import SearchEngine
 
 movies_dataset = None  # TODO
+with open("C:/Users/HSM/PycharmProjects/MIR-PROJ-/Logic/core/IMDB_movies.json", "r") as f:
+    movies_dataset = json.load(f)
+
 search_engine = SearchEngine()
 
 
@@ -29,12 +34,12 @@ def correct_text(text: str, all_documents: List[str]) -> str:
 
 
 def search(
-    query: str,
-    max_result_count: int,
-    method: str = "ltn-lnn",
-    weights: list = [0.3, 0.3, 0.4],
-    should_print=False,
-    preferred_genre: str = None,
+        query: str,
+        max_result_count: int,
+        method: str = "ltn-lnn",
+        weights = {Indexes.STARS: 0.3, Indexes.GENRES: 0.3, Indexes.SUMMARIES: 0.4},
+        should_print=False,
+        preferred_genre: str = None,
 ):
     """
     Finds relevant documents to query
@@ -60,7 +65,11 @@ def search(
     Retrieved documents with snippet
     """
     # TODO : note : ??
-    # weights =
+    weights = {
+        Indexes.STARS: weights[0],
+        Indexes.GENRES: weights[1],
+        Indexes.SUMMARIES: weights[2]
+    }
     return search_engine.search(
         query, method, weights, max_results=max_result_count, safe_ranking=True
     )
@@ -95,16 +104,26 @@ def get_movie_by_id(id: str, movies_dataset: List[Dict[str, str]]) -> Dict[str, 
             "Image_URL": "https://m.media-amazon.com/images/M/MV5BNDE3ODcxYzMtY2YzZC00NmNlLWJiNDMtZDViZWM2MzIxZDYwXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_.jpg",
         },
     )"""
-    result = dict()
+    result = None
     for document in movies_dataset:
-        if document["id"] == id :
+        if document["id"] == id:
             result = document
             break
+    if result is None :
+        result = {
+            "Title": "This is movie's title",
+            "Summary": "This is a summary",
+            "URL": "https://www.imdb.com/title/tt0111161/",
+            "Cast": ["Morgan Freeman", "Tim Robbins"],
+            "Genres": ["Drama", "Crime"],
+            "Image_URL": "https://m.media-amazon.com/images/M/MV5BNDE3ODcxYzMtY2YzZC00NmNlLWJiNDMtZDViZWM2MzIxZDYwXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_.jpg",
+        }
 
     result["Image_URL"] = (
-        "https://m.media-amazon.com/images/M/MV5BNDE3ODcxYzMtY2YzZC00NmNlLWJiNDMtZDViZWM2MzIxZDYwXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_.jpg"  # a default picture for selected movies
+        "https://m.media-amazon.com/images/M/MV5BNDE3ODcxYzMtY2YzZC00NmNlLWJiNDMtZDViZWM2MzIxZDYwXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_.jpg"
+        # a default picture for selected movies
     )
     result["URL"] = (
-        f"https://www.imdb.com/title/{result['id']}"  # The url pattern of IMDb movies
+        f"https://www.imdb.com/title/{result.get('id', 'NOT FOUND')}"  # The url pattern of IMDb movies
     )
     return result

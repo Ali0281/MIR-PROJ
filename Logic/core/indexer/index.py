@@ -64,7 +64,7 @@ class Index:
         for doc in self.preprocessed_documents:
             for star in doc["stars"]:
                 for w in star.split():
-                    # w = w.lower()
+                    w = w.lower()
                     if w in current_index:
                         current_index[w][doc["id"]] = current_index[w].get(doc["id"], 0) + 1
                     else:
@@ -85,7 +85,7 @@ class Index:
         current_index = {}
         for doc in self.preprocessed_documents:
             for genre in doc["genres"]:
-                # genre = genre.lower()
+                genre = genre.lower()
                 if genre in current_index:
                     current_index[genre][doc["id"]] = 1
                 else:
@@ -390,7 +390,8 @@ class Index:
             """for field in document[index_type]:
                 if check_word in field:
                     docs.append(document['id'])
-                    break"""
+                    break
+            """
             if index_type == "documents":
                 if check_word == document["id"]:
                     docs.append(document)
@@ -466,27 +467,27 @@ def main():
     with open("../IMDB_movies.json", "r") as f:
         data = json.load(f)
 
-    pre = Preprocessor(data, "../stopwords.txt")
+    pre = Preprocessor(data, "C:/Users/HSM/PycharmProjects/MIR-PROJ-/Logic/core/stopwords.txt")
     pre.preprocess()
 
     m = Index(pre.documents)
 
+    print("indexing done")
     # TODO : note : used .get instead
     # TODO : note : removed the empty indexses
     m.check_add_remove_is_correct()
     print("checked add remove successfully ... \n")
-    m.index_stars()
 
-    with open("indexes/documents_index.json", "r") as f:
+    with open("index/documents_index.json", "r") as f:
         documents = json.load(f)
 
-    with open("indexes/genres_index.json", "r") as f:
+    with open("index/genres_index.json", "r") as f:
         genres = json.load(f)
 
-    with open("indexes/stars_index.json", "r") as f:
+    with open("index/stars_index.json", "r") as f:
         stars = json.load(f)
 
-    with open("indexes/summaries_index.json", "r") as f:
+    with open("index/summaries_index.json", "r") as f:
         summaries = json.load(f)
 
     print("documents test : ", m.check_if_index_loaded_correctly("documents", documents))
@@ -498,13 +499,13 @@ def main():
     print("checking documents on id tt0110912 : ", m.check_if_indexing_is_good("documents", "tt0110912"), "\n")
     print("checking documents on id tt0084787 : ", m.check_if_indexing_is_good("documents", "tt0084787"), "\n")
 
-    print("checking stars on word Robert : ", m.check_if_indexing_is_good("stars", "Robert"), "\n")
-    print("checking stars on word Kevin : ", m.check_if_indexing_is_good("stars", "Kevin"), "\n")
+    print("checking stars on word robert : ", m.check_if_indexing_is_good("stars", "robert"), "\n")
+    print("checking stars on word kevin : ", m.check_if_indexing_is_good("stars", "kevin"), "\n")
 
-    print("checking genres on word War : ", m.check_if_indexing_is_good("genres", "War"), "\n")
-    print("checking genres on word Drama : ", m.check_if_indexing_is_good("genres", "Drama"), "\n")
+    print("checking genres on word war : ", m.check_if_indexing_is_good("genres", "war"), "\n")
+    print("checking genres on word drama : ", m.check_if_indexing_is_good("genres", "dara"), "\n")
 
-    print("checking summaries on word lake : ", m.check_if_indexing_is_good("summaries", "lake"), "\n")
+    print("checking summaries on word lake : ", m.check_if_indexing_is_good("summaries", "bandits"), "\n")
     print("checking summaries on word badge : ", m.check_if_indexing_is_good("summaries", "badge"), "\n")
     print("checked indexing successfully ... \n")
 

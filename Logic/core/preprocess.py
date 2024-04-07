@@ -1,5 +1,7 @@
 import json
 import re
+
+import nltk
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 
@@ -44,6 +46,21 @@ class Preprocessor:
         List[str]
             The preprocessed documents.
         """
+
+
+        if not isinstance(self.documents[0], dict):
+            res = []
+            for doc in self.documents:
+                res.append(self.preprocess_text(doc))
+
+            return res
+
+        # TODO : note : just to save and reuse
+        with open("C:/Users/HSM/PycharmProjects/MIR-PROJ-/Logic/core/preprocess.json", "r") as f:
+            data = json.load(f)
+        self.documents = data
+        return data
+
         for doc in self.documents:
             # TODO : note : only give attention to <first_page_summary>, <summaries>, <synopsis>, <reviews>
             doc["first_page_summary"] = self.preprocess_text(doc["first_page_summary"])
@@ -60,8 +77,47 @@ class Preprocessor:
 
             preprocessed_reviews = []
             for review in doc["reviews"]:
-                preprocessed_reviews.append(self.preprocess_text(review[0]))  # TODO : do i need to use the score?
+                preprocessed_reviews.append([self.preprocess_text(review[0]), review[1]])  # TODO : do i need to use the score?
             doc["reviews"] = preprocessed_reviews
+
+            doc["title"] = self.preprocess_text(doc["title"])
+
+            doc["release_year"] = self.preprocess_text(doc["release_year"])
+
+            preprocessed_stars = []
+            for star in doc["stars"]:
+                preprocessed_stars.append(self.preprocess_text(star))
+            doc["stars"] = preprocessed_stars
+
+            preprocessed_writers = []
+            for writer in doc["writers"]:
+                preprocessed_writers.append(self.preprocess_text(writer))
+            doc["writers"] = preprocessed_writers
+
+            preprocessed_directors = []
+            for director in doc["directors"]:
+                preprocessed_directors.append(self.preprocess_text(director))
+            doc["directors"] = preprocessed_directors
+
+            preprocessed_genres = []
+            for genre in doc["genres"]:
+                preprocessed_genres.append(self.preprocess_text(genre))
+            doc["genres"] = preprocessed_genres
+
+            preprocessed_languages = []
+            for language in doc["languages"]:
+                preprocessed_languages.append(self.preprocess_text(language))
+            doc["languages"] = preprocessed_languages
+
+            preprocessed_coo = []
+            for c in doc["countries_of_origin"]:
+                preprocessed_coo.append(self.preprocess_text(c))
+            doc["countries_of_origin"] = preprocessed_coo
+
+        with open('C:/Users/HSM/PycharmProjects/MIR-PROJ-/Logic/core/preprocess.json', 'w') as f:
+            json.dump(self.documents, f, indent=4)
+
+        return self.documents
 
     def normalize(self, text: str):
         """
@@ -78,7 +134,8 @@ class Preprocessor:
             The normalized text.
         """
         # TODO
-        return " ".join([self.lemmatizer.lemmatize(w.lower()) for w in self.tokenize(text)])
+        lemmatizer = WordNetLemmatizer()
+        return " ".join([lemmatizer.lemmatize(w.lower()) for w in nltk.word_tokenize(text)])
 
     def remove_links(self, text: str):
         """
@@ -158,11 +215,11 @@ class Preprocessor:
 def main():
     with open("IMDB_movies.json", "r") as f:
         data = json.load(f)
-    print(data[0]["first_page_summary"])
-    pre = Preprocessor(data, "stopwords.txt")
+    print(data[0])
+    pre = Preprocessor(data, "C:/Users/HSM/PycharmProjects/MIR-PROJ-/Logic/core/stopwords.txt")
     pre.preprocess()
     #print(pre.documents[:5])
-    print(pre.documents[0]["first_page_summary"])
+    print(pre.documents[0])
 
 if __name__ == '__main__':
     main()

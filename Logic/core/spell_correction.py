@@ -2,6 +2,8 @@ import heapq
 import json
 import re
 
+from Logic.core.preprocess import Preprocessor
+
 
 class SpellCorrection:
     def __init__(self, all_documents):
@@ -14,13 +16,29 @@ class SpellCorrection:
             The input documents.
         """
         # TODO : note : clear the text from : ; and such
+        # print(all_documents)
+
+        documents_as_string = []
+        # TODO : note : so we are dealing with a list of strings as input of the class
+        for doc in all_documents:
+            # TODO : note : i will just use the summaries / reviews / synopsis as they have the most text available
+            documents_as_string.append(
+                " ".join(doc["summaries"]) + " " + (" ".join(doc["stars"]) + " ") * 3 + " " + (" ".join(
+                    doc["directors"]) + " ") * 3 + " " + (" ".join(doc["writers"]) + " ") * 3 + (
+                            doc["title"] + " ") * 10)
+            # print(documents_as_string[-1])
+            # + " ".join([review[0] for review in doc["reviews"]]) + " ".join(doc["synopsis"]))
+
+        self.save = all_documents
+        self.all_documents = documents_as_string
+        all_documents = documents_as_string
         for index, document in enumerate(all_documents):
             all_documents[index] = re.sub(r'\b[^a-zA-Z0-9\']+\b', ' ', document)
         # TODO : note : can get rid of lowers or add or ...
         self.all_shingled_words, self.word_counter = self.shingling_and_counting(all_documents)
         # TODO : note : will add stopwords to skip them as we had the data preprocessed
         self.stopwords = []
-        with open("stopwords.txt", 'r') as f:
+        with open("C:/Users/HSM/PycharmProjects/MIR-PROJ-/Logic/core/stopwords.txt", 'r') as f:
             for word in f:
                 self.stopwords.append(word.strip().lower())
 
@@ -126,7 +144,7 @@ class SpellCorrection:
             heapq.heappush(top5_candidates, (self.jaccard_score(shingles, value), key, value))
             # TODO : note : giving out 6 candidates one probably being the same word
             if len(top5_candidates) > 6: heapq.heappop(top5_candidates)
-        #print(top5_candidates)
+        # print(top5_candidates)
         return [word for score, word, shingles in sorted(top5_candidates)][::-1]
 
     def word_spell_checker(self, word):
@@ -140,7 +158,7 @@ class SpellCorrection:
         for index, n in enumerate(nearest_words):
             j_score = self.jaccard_score(self.all_shingled_words[word], self.all_shingled_words[n])
             scores.append((n, j_score * normalized_tf[index]))
-            #print((n, j_score * normalized_tf[index]))
+            # print((n, j_score * normalized_tf[index]))
 
         if len(scores) > 0:
             return max(scores, key=lambda x: x[1])[0]
@@ -178,18 +196,12 @@ def main():
         data = json.load(f)
 
     # TODO : note : in case you needed a pre proccessed input, but it seems to work poorly as the pre process proceeds to remove stopwords and such
-    #pre = Preprocessor(data, "stopwords.txt")
-    #pre.preprocess()
-    #data = pre.documents
+    pre = Preprocessor(data, "C:/Users/HSM/PycharmProjects/MIR-PROJ-/Logic/core/stopwords.txt")
+    pre.preprocess()
+    data = pre.documents
 
-    documents_as_string = []
-    # TODO : note : so we are dealing with a list of strings as input of the class
-    for doc in data:
-        # TODO : note : i will just use the summaries / reviews / synopsis as they have the most text available
-        documents_as_string.append(
-            " ".join(doc["summaries"]) + " ".join([review[0] for review in doc["reviews"]]) + " ".join(doc["synopsis"]))
-    s = SpellCorrection(documents_as_string)
-    print(s.spell_check("chec thi mis spel"))
+    s = SpellCorrection(data)
+    print(s.spell_check("matrx matix mtrix atrix"))
 
 
 if __name__ == '__main__':

@@ -39,9 +39,22 @@ class DocumentLengthsIndex:
             A dictionary of the document lengths. The keys are the document IDs, and the values are
             the document's length in that field (where).
         """
-
         # TODO:
-    
+        if where not in ["stars", "genres", "summaries"]: return -1
+        if where == "summaries":
+            result = {}
+            for doc_id, doc in self.documents_index.items():
+                sum_ = 0
+                for summary in doc["summaries"]:
+                    sum_ += len(summary.split())
+                result[doc_id] = sum_
+            return result
+        else:
+            result = {}
+            for doc_id, doc in self.documents_index.items():
+                result[doc_id] = len(doc[where])
+            return result
+
     def store_document_lengths_index(self, path , index_name):
         """
         Stores the document lengths index to a file.

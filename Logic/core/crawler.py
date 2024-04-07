@@ -63,22 +63,22 @@ class IMDbCrawler:
     def reset_files(self):
         with open('IMDB_crawled.json', 'w') as f:
             self.add_queue_lock.acquire()
-            json.dump([], f)
+            json.dump([], f, indent=4)
             self.add_queue_lock.release()
 
         with open('IMDB_not_crawled.json', 'w') as f:
             self.add_queue_lock.acquire()
-            json.dump([], f)
+            json.dump([], f, indent=4)
             self.add_queue_lock.release()
 
         with open('IMDB_added_ids.json', 'w') as f:
             self.add_queue_lock.acquire()
-            json.dump([], f)
+            json.dump([], f, indent=4)
             self.add_queue_lock.release()
 
         with open('IMDB_movies.json', 'w') as f:
             self.add_queue_lock.acquire()
-            json.dump([], f)
+            json.dump([], f, indent=4)
             self.add_queue_lock.release()
 
     def write_to_file_as_json(self):
@@ -88,22 +88,22 @@ class IMDbCrawler:
         # TODO √
         with open('IMDB_crawled.json', 'w') as f:
             self.add_queue_lock.acquire()
-            json.dump(self.crawled, f)
+            json.dump(self.crawled, f, indent=4)
             self.add_queue_lock.release()
 
         with open('IMDB_not_crawled.json', 'w') as f:
             self.add_queue_lock.acquire()
-            json.dump(list(self.not_crawled), f)
+            json.dump(list(self.not_crawled), f, indent=4)
             self.add_queue_lock.release()
 
         with open('IMDB_added_ids.json', 'w') as f:
             self.add_queue_lock.acquire()
-            json.dump(self.added_ids, f)
+            json.dump(self.added_ids, f, indent=4)
             self.add_queue_lock.release()
 
         with open('IMDB_movies.json', 'w') as f:
             self.add_queue_lock.acquire()
-            json.dump(self.movies, f)
+            json.dump(self.movies, f, indent=4)
             self.add_queue_lock.release()
 
     def read_from_file_as_json(self):
@@ -870,7 +870,11 @@ class IMDbCrawler:
 
 
 def main():
-    imdb_crawler = IMDbCrawler(crawling_threshold=200)
+    imdb_crawler = IMDbCrawler(crawling_threshold=250)
+
+    """imdb_crawler.read_from_file_as_json()
+    imdb_crawler.write_to_file_as_json()
+    """
 
     """imdb_crawler.read_from_file_as_json()
     print(len(imdb_crawler.added_ids))
@@ -880,12 +884,12 @@ def main():
     print(len(imdb_crawler.not_crawled))"""
 
 
-    imdb_crawler.reset_files()
+    #imdb_crawler.reset_files()
 
-
+"""
     imdb_crawler.read_from_file_as_json()
     imdb_crawler.start_crawling()
-    imdb_crawler.write_to_file_as_json()
+    imdb_crawler.write_to_file_as_json()"""
 
 
 if __name__ == '__main__':
