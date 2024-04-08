@@ -97,7 +97,8 @@ class Snippet:
             for i in range(len(snippet)):
                 if snippet[i] in words:
                     if snippet[i] in not_exist_words: not_exist_words.remove(snippet[i])
-                    snippet[i] = f"***{snippet[i]}***"
+                    snippet[i] = "***" + snippet[i] + "***"
+
 
             final_snippet += " ".join(snippet) + " ... "
 
