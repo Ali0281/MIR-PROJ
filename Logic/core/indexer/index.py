@@ -112,6 +112,11 @@ class Index:
                         current_index[w][doc["id"]] = current_index[w].get(doc["id"], 0) + summary.count(w)
                     else:
                         current_index[w] = {doc["id"]: summary.count(w)}
+            for w in doc["title"].split():
+                if w in current_index:
+                    current_index[w][doc["id"]] = current_index[w].get(doc["id"], 0) + summary.count(w) * 3
+                else:
+                    current_index[w] = {doc["id"]: summary.count(w) * 3}
         return current_index
 
     def get_posting_list(self, word: str, index_type: str):
@@ -437,8 +442,8 @@ class Index:
         print('Implemented time: ', implemented_time)
 
         # TOOD : note : my testing code
-        #print(docs)
-        #print(posting_list)
+        # print(docs)
+        # print(posting_list)
 
         if set(docs).issubset(set(posting_list)):
             print('Indexing is correct')
@@ -503,9 +508,9 @@ def main():
     print("checking stars on word kevin : ", m.check_if_indexing_is_good("stars", "kevin"), "\n")
 
     print("checking genres on word war : ", m.check_if_indexing_is_good("genres", "war"), "\n")
-    print("checking genres on word drama : ", m.check_if_indexing_is_good("genres", "dara"), "\n")
+    print("checking genres on word drama : ", m.check_if_indexing_is_good("genres", "darma"), "\n")
 
-    print("checking summaries on word lake : ", m.check_if_indexing_is_good("summaries", "bandits"), "\n")
+    print("checking summaries on word lake : ", m.check_if_indexing_is_good("summaries", "lake"), "\n")
     print("checking summaries on word badge : ", m.check_if_indexing_is_good("summaries", "badge"), "\n")
     print("checked indexing successfully ... \n")
 

@@ -26,6 +26,7 @@ class Preprocessor:
         self.lemmatized_stopwords = []
         self.lemmatizer = WordNetLemmatizer()
         self.tokenizer = word_tokenize
+
         try:
             with open(path, 'r') as f:
                 for word in f:

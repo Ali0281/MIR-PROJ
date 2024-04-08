@@ -69,7 +69,7 @@ class Snippet:
         # TODO : note : i will iterate through the text and check every key word to avoid duplicate texts and support the guide rules
         # TODO : note on implementation : if 1 2 3 4 5  is the string and we want 1 and 5 with 2 near words : 3 will appear two times, so for convenience i return ... ***1*** 2 3 4 ***5*** ...
 
-        final_snippet = "... "
+        final_snippet = "..."
         words, document = self.remove_stop_words_from_query(query.lower()).split(), word_tokenize(doc.lower())
         not_exist_words = words.copy()
         penalty = 0

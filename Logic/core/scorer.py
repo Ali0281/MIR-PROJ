@@ -4,7 +4,7 @@ import numpy as np
 
 
 class Scorer:
-    def __init__(self, index, number_of_documents):
+    def __init__(self, index, number_of_documents, all = None):
         """
         Initializes the Scorer.
 
@@ -16,7 +16,13 @@ class Scorer:
             The number of documents in the index.
         """
 
-        self.index = index
+        if all is None :
+            self.index = index.get_index()
+            self.all = None
+        else:
+            self.index = index
+            self.all = all.get_index()
+
         self.idf = {}
         self.N = number_of_documents
 
@@ -44,8 +50,8 @@ class Scorer:
         """
         list_of_documents = []
         for term in query:
-            if term in self.index.get_index().keys():
-                list_of_documents.extend(self.index.get_index()[term].keys())
+            if term in self.index.keys():
+                list_of_documents.extend(self.index[term].keys())
         return list(set(list_of_documents))
 
     def get_idf(self, term):
@@ -68,11 +74,17 @@ class Scorer:
         """
         idf_ = self.idf.get(term, None)
         if idf_ is None:
-            # TODO
-            df = len(self.index.get_index().get(term, dict()))
-            # TODO : note : can change this
-            idf_ = np.log((self.N - df + 0.5) / (df + 0.5)) if df != 0 else 0.0
-            self.idf[term] = idf_
+            if self.all is None:
+                # TODO
+                df = len(self.index.get(term, dict()))
+                # TODO : note : can change this
+                idf_ = np.log2(self.N / (df + 1))
+                self.idf[term] = idf_
+            else :
+                df = len(self.all.get(term, dict()))
+                # TODO : note : can change this
+                idf_ = np.log2(self.N / (df + 1))
+                self.idf[term] = idf_
         return idf_
 
     def get_query_tfs(self, query):
@@ -97,69 +109,32 @@ class Scorer:
         return result
 
     def compute_scores_with_vector_space_model(self, query, method):
-        """
-        compute scores with vector space model
-
-        Parameters
-        ----------
-        query: List[str]
-            The query to be scored
-        method : str ((n|l)(n|t)(n|c).(n|l)(n|t)(n|c))
-            The method to use for searching.
-
-        Returns
-        -------
-        dict
-            A dictionary of the document IDs and their scores.
-        """
         # TODO
-        result = {}
-        qtf = self.get_query_tfs(query)
-        for document in self.get_list_of_documents(query):
-            result[document] = self.get_vector_space_model_score(query, qtf, document, method.split(".")[0],
-                                                                 method.split(".")[1])
-        return result
+        scores = {}
+        query_tfs = self.get_query_tfs(query)
+        for document_id in self.get_list_of_documents(query):
+            scores[document_id] = self.get_vector_space_model_score(query, query_tfs, document_id, method.split(".")[0],
+                                                                    method.split(".")[1])
+        return scores
 
     def get_vector_space_model_score(self, query, query_tfs, document_id, document_method, query_method):
-        """
-        Returns the Vector Space Model score of a document for a query.
-
-        Parameters
-        ----------
-        query: List[str]
-            The query to be scored
-        query_tfs : dict
-            The term frequencies of the terms in the query.
-        document_id : str
-            The document to calculate the score for.
-        document_method : str (n|l)(n|t)(n|c)
-            The method to use for the document.
-        query_method : str (n|l)(n|t)(n|c)
-            The method to use for the query.
-
-        Returns
-        -------
-        float
-            The Vector Space Model score of the document for the query.
-        """
         # TODO
-        score = 0
-
+        d_vec, q_vec = [], []
         for term in query:
-            if term not in self.index.get_index() or document_id not in self.index.get_index()[term]: continue
-            tf, idf, q_tf = self.index.get_index()[term][document_id], self.get_idf(term), query_tfs[term]
+            dtf, qtf = self.index.get(term, {}).get(document_id, 0), query_tfs.get(term, 0)
 
-            dtf = tf if document_method[0] == 'n' else 1 + np.log(tf)
-            dl = 1 if document_method[1] == 'n' else tf / (tf + 0.5 + 1.5 * (len(self.index.get_index()[term]) / self.N))
-            dn = 1 if document_method[2] == 'n' else np.sqrt(np.sum([v ** 2 for v in self.index.get_index()[term].values()]))
+            dtf = dtf if document_method[0] == 'n' else np.log(dtf + 1)
+            qtf = qtf if query_method[0] == 'n' else np.log(qtf + 1)
 
-            qtf = 1 if query_method[0] == 'n' else 1 + np.log(q_tf)
-            ql = 1 if query_method[1] == 'n' else q_tf / (q_tf + 0.5 + 1.5 * (len(query) / self.N))
-            qn = 1 if query_method[2] == 'n' else np.sqrt(np.sum([v ** 2 for v in query_tfs.values()]))
+            ddf = 1 if document_method[1] == 'n' else self.get_idf(term)
+            qdf = 1 if query_method[1] == 'n' else self.get_idf(term)
 
-            score += (dtf * qtf * idf) / (dl * ql * dn * qn)
+            d_vec.append(dtf * ddf)
+            q_vec.append(qtf * qdf)
 
-        return score
+        d_vec = d_vec if document_method[2] == 'n' or np.linalg.norm(d_vec) == 0 else d_vec / np.linalg.norm(d_vec)
+        q_vec = q_vec if query_method[2] == 'n' or np.linalg.norm(q_vec) == 0 else q_vec / np.linalg.norm(q_vec)
+        return np.dot(np.array(d_vec), np.array(q_vec))
 
     def compute_scores_with_okapi_bm25(self, query, average_document_field_length, document_lengths):
         """
@@ -174,24 +149,31 @@ class Scorer:
         document_lengths : dict
             A dictionary of the document lengths. The keys are the document IDs, and the values are
             the document's length in that field.
-        
+
         Returns
         -------
         dict
             A dictionary of the document IDs and their scores.
         """
         # TODO
-        result = {}
-        for document in self.get_list_of_documents(query):
-            result[document] = self.get_okapi_bm25_score(query, document, average_document_field_length, document_lengths)
-        return result
+        scores = {}
+        k1 = 1.5
+        b = 1
+        for id in self.get_list_of_documents(query):
+            # TODO : note : added some parameters to the get_okapi_bm25_score for easier computation
+            scores[id] = self.get_okapi_bm25_score(query, id, average_document_field_length, document_lengths, k1, b)
+        return scores
 
-    def get_okapi_bm25_score(self, query, document_id, average_document_field_length, document_lengths):
+    def get_okapi_bm25_score(self, query, document_id, average_document_field_length, document_lengths, k1=1.5, b=0.75):
         """
         Returns the Okapi BM25 score of a document for a query.
 
         Parameters
         ----------
+        b: float
+            tuning parameter
+        k1: float
+            tuning parameter
         query: List[str]
             The query to be scored
         document_id : str
@@ -208,12 +190,21 @@ class Scorer:
             The Okapi BM25 score of the document for the query.
         """
         # TODO
-        k1, b ,score = 1.5, 0.75, 0
+        # TODO : note : had some help from : https://github.com/yutayamazaki/okapi-bm25/blob/master/okapi_bm25/bm25.py
+        score = 0
         for term in query:
-            if term not in self.index.get_index() or document_id not in self.index.get_index()[term]:
-                continue
             idf = self.get_idf(term)
-            tf = self.index.get_index()[term].get(document_id, 0)
-            dl = document_lengths.get(document_id, 0)
-            score += idf * ((tf * (k1 + 1)) / (tf + k1 * (1 - b + b * (dl / average_document_field_length))))
+
+            if term not in self.index or document_id not in self.index[term]:
+                tf = 0
+            else:
+                tf = self.index[term][document_id]
+
+            if document_id not in document_lengths:
+                dl = 0
+            else:
+                dl = document_lengths[document_id]
+            if tf + k1 * (1 - b + (b * dl / average_document_field_length)) == 0 : continue
+            score += idf * (tf * (k1 + 1)) / (tf + k1 * (1 - b + (b * dl / average_document_field_length)))
+
         return score

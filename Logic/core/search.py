@@ -1,3 +1,6 @@
+import json
+
+from Logic import utils
 from Logic.core.indexer.index_reader import Index_reader
 from Logic.core.indexer.indexes_enum import Indexes, Index_types
 from Logic.core.preprocess import Preprocessor
@@ -53,7 +56,9 @@ class SearchEngine:
         """
 
         preprocessor = Preprocessor([query], "C:/Users/HSM/PycharmProjects/MIR-PROJ-/Logic/core/stopwords.txt")
+
         query = preprocessor.preprocess()[0].split()
+        print(query)
 
         scores = {}
         if safe_ranking:
@@ -62,7 +67,6 @@ class SearchEngine:
             self.find_scores_with_unsafe_ranking(query, method, weights, max_results, scores)
 
         final_scores = {}
-
         self.aggregate_scores(weights, scores, final_scores)
 
         result = sorted(final_scores.items(), key=lambda x: x[1], reverse=True)
@@ -109,16 +113,33 @@ class SearchEngine:
             The scores of the documents.
         """
         for tier in ["first_tier", "second_tier", "third_tier"]:
+            iter_scores = {}
             for field in weights:
                 # TODO
-                tier_index = self.tiered_index[field][tier]
-                scorer = Scorer(tier_index, self.metadata_index.get_number_of_documents())
-                if method == "OkapiBM25": scores_for_tier = scorer.compute_scores_with_okapi_bm25(query, self.metadata_index.get_index()["averge_document_length"][field.value], self.document_lengths_index.get_index())
-                if "." in method : scores_for_tier = scorer.compute_scores_with_vector_space_model(query, method)
-                for doc_id, score in scores_for_tier.items():
-                    if doc_id not in scores:
-                        scores[doc_id] = {}
-                    scores[doc_id][field] = score
+                scorer = Scorer(self.tiered_index[field].get_index()[tier],
+                                self.metadata_index.get_index()["document_count"], self.document_indexes[field])
+                if method == "OkapiBM25": scores_for_field = scorer.compute_scores_with_okapi_bm25(query,
+                                                                                                   self.metadata_index.get_index()[
+                                                                                                       "averge_document_length"][
+                                                                                                       field.value],
+                                                                                                   self.document_lengths_index[
+                                                                                                       field].get_index())
+                if "." in method: scores_for_field = scorer.compute_scores_with_vector_space_model(query, method)
+                for doc_id, score in scores_for_field.items():
+                    if doc_id not in iter_scores:
+                        iter_scores[doc_id] = {}
+                    iter_scores[doc_id][field] = score
+
+
+            #scores = self.merge_scores(scores, iter_scores, weights)
+
+            for id in set(scores.keys()).union(set(iter_scores.keys())):
+                if id not in scores: scores[id] = {}
+                for field in weights:
+                    scores[id][field] = max(scores.get(id, {}).get(field, 0), iter_scores.get(id, {}).get(field, 0))
+
+
+            if len(scores) >= max_results: break
 
     def find_scores_with_safe_ranking(self, query, method, weights, scores):
         """
@@ -138,14 +159,19 @@ class SearchEngine:
         for field in weights:
             # TODO
             scorer = Scorer(self.document_indexes[field], self.metadata_index.get_index()["document_count"])
-            if method == "OkapiBM25": scores_for_field = scorer.compute_scores_with_okapi_bm25(query, self.metadata_index.get_index()["averge_document_length"][field.value], self.document_lengths_index)
+            if method == "OkapiBM25": scores_for_field = scorer.compute_scores_with_okapi_bm25(query,
+                                                                                               self.metadata_index.get_index()[
+                                                                                                   "averge_document_length"][
+                                                                                                   field.value],
+                                                                                               self.document_lengths_index[
+                                                                                                   field].get_index())
             if "." in method: scores_for_field = scorer.compute_scores_with_vector_space_model(query, method)
             for doc_id, score in scores_for_field.items():
                 if doc_id not in scores:
                     scores[doc_id] = {}
                 scores[doc_id][field] = score
 
-    def merge_scores(self, scores1, scores2):
+    def merge_scores(self, scores1, scores2, weights):
         """
         Merges two dictionaries of scores.
 
@@ -163,22 +189,29 @@ class SearchEngine:
         """
         # TODO
         merged_scores = {}
-        for doc_id in scores1:
-            merged_scores[doc_id] = scores1[doc_id] + scores2.get(doc_id, 0)
-        for doc_id in scores2 and doc_id not in scores1:
-            merged_scores[doc_id] = scores2[doc_id]
+        for id in set(scores1.keys()).union(set(scores2.keys())):
+            merged_scores[id] = {}
+            for field in weights:
+                merged_scores[id][field] = max(scores1.get(id, {}).get(field, 0), scores2.get(id, {}).get(field, 0))
         return merged_scores
 
 
 if __name__ == '__main__':
     search_engine = SearchEngine()
-    query = "spider man in wonderland"
-    method = "lnc.ltc"
+    query = "spiderman wonderland"
+    method = "ltc.lnc"
+    # method = "ltn.lnn"
+    # method = "OkapiBM25"
     weights = {
-        Indexes.STARS: 1,
-        Indexes.GENRES: 1,
-        Indexes.SUMMARIES: 1
+        Indexes.STARS: 0.1,
+        Indexes.GENRES: 0.05,
+        Indexes.SUMMARIES: 0.85
     }
-    result = search_engine.search(query, method, weights)
+    result = search_engine.search(query, method, weights, safe_ranking=False)
+    # print(result)
 
-    print(result)
+    with open("C:/Users/HSM/PycharmProjects/MIR-PROJ-/Logic/core/IMDB_movies.json", "r") as f:
+        movies_dataset = json.load(f)
+
+    for r in result:
+        print(utils.get_movie_by_id(r[0], movies_dataset)["title"])

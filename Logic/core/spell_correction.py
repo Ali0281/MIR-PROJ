@@ -23,9 +23,9 @@ class SpellCorrection:
         for doc in all_documents:
             # TODO : note : i will just use the summaries / reviews / synopsis as they have the most text available
             documents_as_string.append(
-                " ".join(doc["summaries"]) + " " + (" ".join(doc["stars"]) + " ") * 3 + " " + (" ".join(
-                    doc["directors"]) + " ") * 3 + " " + (" ".join(doc["writers"]) + " ") * 3 + (
-                            doc["title"] + " ") * 10)
+                " ".join(doc["summaries"]) + " " + (" ".join(doc["stars"]) + " ") * 100 + " " + (" ".join(
+                    doc["directors"]) + " ") * 100 + " " + (" ".join(doc["writers"]) + " ") * 100 + (
+                            doc["title"] + " ") * 100)
             # print(documents_as_string[-1])
             # + " ".join([review[0] for review in doc["reviews"]]) + " ".join(doc["synopsis"]))
 
@@ -201,7 +201,9 @@ def main():
     data = pre.documents
 
     s = SpellCorrection(data)
+
     print(s.spell_check("matrx matix mtrix atrix"))
+    print(s.spell_check("spiderman in wonderland"))
 
 
 if __name__ == '__main__':
