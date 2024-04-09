@@ -154,18 +154,15 @@ class MinHashLSH:
                 else:
                     if j not in buckets[bh[slice_]]: buckets[bh[slice_]].append(j)
 
-        return buckets
-
-    def calculate_all(self, buckets):
         res = {}
         checker = set()
-
         for k in buckets.values():
             if len(k) == 0: continue
             checker.add(tuple(k))
-
-        for index ,value in enumerate(checker): res[index] = value
+        for index, value in enumerate(checker): res[index] = value
         return res
+
+        return buckets
 
     def perform_lsh(self):
         """
@@ -177,7 +174,7 @@ class MinHashLSH:
             A dictionary mapping bucket IDs to lists of document indices.
         """
         # TODO
-        return self.calculate_all(self.lsh_buckets(self.min_hash_signature()))
+        return self.lsh_buckets(self.min_hash_signature())
 
     def jaccard_score(self, first_set, second_set):
         """
