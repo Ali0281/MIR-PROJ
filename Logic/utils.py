@@ -34,10 +34,12 @@ def correct_text(text: str, all_documents: List[str]) -> str:
         The corrected form of the given text
     """
     # TODO: You can add any preprocessing steps here, if needed!
-    spell_correction_obj = SpellCorrection(all_documents)
-    text = spell_correction_obj.spell_check(text)
-    return text
-
+    # TODO : note : seems there is nothing to do in this file for this phase but this section! there is no need for testing, just check out spell_correction.py
+    pre = Preprocessor([{}], "C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/stopwords.txt")
+    pre.preprocess()
+    data = pre.documents
+    spell_correction_obj = SpellCorrection(data)
+    return spell_correction_obj.spell_check(text)
 
 def search(
     query: str,
@@ -70,7 +72,17 @@ def search(
     list
     Retrieved documents with snippet
     """
-    weights = ...  # TODO
+    weights = {
+        Indexes.STARS: weights[0],
+        Indexes.GENRES: weights[1],
+        Indexes.SUMMARIES: weights[2]
+    }
+    """weights = {
+        Indexes.STARS: 0.1,
+        Indexes.GENRES: 0.1,
+        Indexes.SUMMARIES: 0.8
+    }"""
+
     return search_engine.search(
         query, method, weights, max_results=max_result_count, safe_ranking=True
     )

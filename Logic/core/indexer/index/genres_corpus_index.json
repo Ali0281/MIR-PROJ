@@ -1,0 +1,31 @@
+[
+    {
+        "crime": 601,
+        "drama": 1867,
+        "biography": 193,
+        "history": 153,
+        "action": 791,
+        "adventure": 626,
+        "fantasy": 415,
+        "western": 99,
+        "thriller": 903,
+        "romance": 501,
+        "scifi": 458,
+        "mystery": 403,
+        "war": 181,
+        "comedy": 857,
+        "family": 343,
+        "animation": 299,
+        "musical": 140,
+        "music": 72,
+        "horror": 340,
+        "filmnoir": 48,
+        "sport": 85,
+        "documentary": 123,
+        "short": 211,
+        "realitytv": 2,
+        "news": 2,
+        "talkshow": 2
+    },
+    9715
+]

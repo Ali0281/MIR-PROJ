@@ -130,7 +130,7 @@ def search_handling(
         return
 
     if search_button:
-        corrected_query = utils.correct_text(search_term, utils.all_documents)
+        corrected_query = utils.correct_text(search_term, utils.movies_dataset)
 
         if corrected_query != search_term:
             st.warning(f"Your search terms were corrected to: {corrected_query}")
@@ -144,9 +144,9 @@ def search_handling(
                 search_max_num,
                 search_method,
                 search_weights,
-                unigram_smoothing=unigram_smoothing,
-                alpha=alpha,
-                lamda=lamda,
+                #unigram_smoothing=unigram_smoothing,
+                #alpha=alpha,
+                #lamda=lamda,
             )
             if "search_results" in st.session_state:
                 st.session_state["search_results"] = result

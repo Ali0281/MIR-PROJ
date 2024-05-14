@@ -1,8 +1,10 @@
+import json
+
 import numpy as np
 
 
 class Scorer:
-    def __init__(self, index, number_of_documents, all = None):
+    def __init__(self, index, number_of_documents, all=None):
         """
         Initializes the Scorer.
 
@@ -13,8 +15,7 @@ class Scorer:
         number_of_documents : int
             The number of documents in the index.
         """
-
-        if all is None :
+        if all is None:
             self.index = index.get_index()
             self.all = None
         else:
@@ -24,7 +25,7 @@ class Scorer:
         self.idf = {}
         self.N = number_of_documents
 
-    def get_list_of_documents(self,query):
+    def get_list_of_documents(self, query):
         """
         Returns a list of documents that contain at least one of the terms in the query.
 
@@ -51,7 +52,7 @@ class Scorer:
             if term in self.index.keys():
                 list_of_documents.extend(self.index[term].keys())
         return list(set(list_of_documents))
-    
+
     def get_idf(self, term):
         """
         Returns the inverse document frequency of a term.
@@ -78,7 +79,7 @@ class Scorer:
                 # TODO : note : can change this
                 idf_ = np.log2(self.N / (df + 1))
                 self.idf[term] = idf_
-            else :
+            else:
                 df = len(self.all.get(term, dict()))
                 # TODO : note : can change this
                 idf_ = np.log2(self.N / (df + 1))
@@ -122,7 +123,6 @@ class Scorer:
         dict
             A dictionary of the document IDs and their scores.
         """
-
         # TODO
         scores = {}
         query_tfs = self.get_query_tfs(query)
@@ -131,9 +131,7 @@ class Scorer:
                                                                     method.split(".")[1])
         return scores
 
-    def get_vector_space_model_score(
-        self, query, query_tfs, document_id, document_method, query_method
-    ):
+    def get_vector_space_model_score(self, query, query_tfs, document_id, document_method, query_method):
         """
         Returns the Vector Space Model score of a document for a query.
 
@@ -155,10 +153,6 @@ class Scorer:
         float
             The Vector Space Model score of the document for the query.
         """
-
-        # TODO
-        pass
-    def get_vector_space_model_score(self, query, query_tfs, document_id, document_method, query_method):
         # TODO
         d_vec, q_vec = [], []
         for term in query:
@@ -231,10 +225,27 @@ class Scorer:
             The Okapi BM25 score of the document for the query.
         """
         # TODO
-        pass
+        # TODO : note : had some help from : https://github.com/yutayamazaki/okapi-bm25/blob/master/okapi_bm25/bm25.py
+        score = 0
+        for term in query:
+            idf = self.get_idf(term)
+
+            if term not in self.index or document_id not in self.index[term]:
+                tf = 0
+            else:
+                tf = self.index[term][document_id]
+
+            if document_id not in document_lengths:
+                dl = 0
+            else:
+                dl = document_lengths[document_id]
+            if tf + k1 * (1 - b + (b * dl / average_document_field_length)) == 0: continue
+            score += idf * (tf * (k1 + 1)) / (tf + k1 * (1 - b + (b * dl / average_document_field_length)))
+
+        return score
 
     def compute_scores_with_unigram_model(
-        self, query, smoothing_method, document_lengths=None, alpha=0.5, lamda=0.5
+            self, query, smoothing_method, document_lengths=None, alpha=0.5, lamda=0.5, type=""
     ):
         """
         Calculates the scores for each document based on the unigram model.
@@ -259,13 +270,15 @@ class Scorer:
         float
             A dictionary of the document IDs and their scores.
         """
-
         # TODO
-        pass
+        scores = {}
+        for id in self.get_list_of_documents(query):
+            scores[id] = self.get_score_with_unigram_model(query, id, smoothing_method, document_lengths, alpha, lamda,
+                                                           type)
+        return scores
 
-    def compute_score_with_unigram_model(
-        self, query, document_id, smoothing_method, document_lengths, alpha, lamda
-    ):
+    def get_score_with_unigram_model(self, query, document_id, smoothing_method, document_lengths, alpha, lamda,
+                                     type):
         """
         Calculates the scores for each document based on the unigram model.
 
@@ -291,25 +304,36 @@ class Scorer:
         float
             The Unigram score of the document for the query.
         """
+        CF, count = None, None
+        if type == "genres":
+            with open("C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/indexer/index/genres_corpus_index.json",
+                      "r") as f:
+                CF, count = json.load(f)
+        elif type == "stars":
+            with open("C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/indexer/index/stars_corpus_index.json",
+                      "r") as f:
+                CF, count = json.load(f)
+        elif type == "summaries":
+            with open("C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/indexer/index/summaries_corpus_index.json",
+                      "r") as f:
+                CF, corpus_count = json.load(f)
+        else:
+            raise Exception("wrong type for unigram model")
 
-        # TODO
-        pass
+        score = 1
+        word_count = document_lengths.get(document_id, 0)
+        if word_count == 0 or corpus_count == 0: raise Exception("zero value for doc length for unigram model")
 
-        # TODO : note : had some help from : https://github.com/yutayamazaki/okapi-bm25/blob/master/okapi_bm25/bm25.py
-        score = 0
         for term in query:
-            idf = self.get_idf(term)
+            dtf = self.index.get(term, {}).get(document_id, 0)
+            tCF = CF.get(term, 0)
 
-            if term not in self.index or document_id not in self.index[term]:
-                tf = 0
-            else:
-                tf = self.index[term][document_id]
-
-            if document_id not in document_lengths:
-                dl = 0
-            else:
-                dl = document_lengths[document_id]
-            if tf + k1 * (1 - b + (b * dl / average_document_field_length)) == 0 : continue
-            score += idf * (tf * (k1 + 1)) / (tf + k1 * (1 - b + (b * dl / average_document_field_length)))
-
+            if smoothing_method == "bayes":
+                score *= ((dtf + alpha * (tCF / corpus_count)) / (word_count + alpha))
+            elif smoothing_method == "naive":
+                score *= (dtf / word_count)
+            elif smoothing_method == "mixture":
+                score *= lamda * (dtf / word_count) + (1 - lamda) * ((tCF / corpus_count))
+            else :
+                raise Exception("no smoothing method")
         return score

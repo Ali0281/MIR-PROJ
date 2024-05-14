@@ -35,15 +35,15 @@ class SearchEngine:
         self.metadata_index = Index_reader(path, Indexes.DOCUMENTS, Index_types.METADATA)
 
     def search(
-        self,
-        query,
-        method,
-        weights,
-        safe_ranking=True,
-        max_results=10,
-        smoothing_method=None,
-        alpha=0.5,
-        lamda=0.5,
+            self,
+            query,
+            method,
+            weights,
+            safe_ranking=True,
+            max_results=10,
+            smoothing_method="mixture",
+            alpha=0.5,
+            lamda=0.5,
     ):
         """
         searches for the query in the indexes.
@@ -154,14 +154,12 @@ class SearchEngine:
                         iter_scores[doc_id] = {}
                     iter_scores[doc_id][field] = score
 
-
-            #scores = self.merge_scores(scores, iter_scores, weights)
+            # scores = self.merge_scores(scores, iter_scores, weights)
 
             for id in set(scores.keys()).union(set(iter_scores.keys())):
                 if id not in scores: scores[id] = {}
                 for field in weights:
                     scores[id][field] = max(scores.get(id, {}).get(field, 0), iter_scores.get(id, {}).get(field, 0))
-
 
             if len(scores) >= max_results: break
 
@@ -195,11 +193,9 @@ class SearchEngine:
                 if doc_id not in scores:
                     scores[doc_id] = {}
                 scores[doc_id][field] = score
-            # TODO
-            pass
 
     def find_scores_with_unigram_model(
-        self, query, smoothing_method, weights, scores, alpha=0.5, lamda=0.5
+            self, query, smoothing_method, weights, scores, alpha=0.5, lamda=0.5
     ):
         """
         Calculates the scores for each document based on the unigram model.
@@ -221,31 +217,38 @@ class SearchEngine:
             probability and the collection probability. Defaults to 0.5.
         """
         # TODO
-        pass
+        for field in weights:
+            scorer = Scorer(self.document_indexes[field], self.metadata_index.get_index()["document_count"])
+            scores_for_field = (scorer.compute_scores_with_unigram_model(query, smoothing_method, self.document_lengths_index[field].get_index(), alpha, lamda, field.value))
+            for doc_id, score in scores_for_field.items():
+                if doc_id not in scores:
+                    scores[doc_id] = {}
+                scores[doc_id][field] = score
 
-    def merge_scores(self, scores1, scores2, weights):
-        """
-        Merges two dictionaries of scores.
+def merge_scores(self, scores1, scores2, weights):
+    """
+    Merges two dictionaries of scores.
 
-        Parameters
-        ----------
-        scores1 : dict
-            The first dictionary of scores.
-        scores2 : dict
-            The second dictionary of scores.
+    Parameters
+    ----------
+    scores1 : dict
+        The first dictionary of scores.
+    scores2 : dict
+        The second dictionary of scores.
 
-        Returns
-        -------
-        dict
-            The merged dictionary of scores.
-        """
-        # TODO
-        merged_scores = {}
-        for id in set(scores1.keys()).union(set(scores2.keys())):
-            merged_scores[id] = {}
-            for field in weights:
-                merged_scores[id][field] = max(scores1.get(id, {}).get(field, 0), scores2.get(id, {}).get(field, 0))
-        return merged_scores
+    Returns
+    -------
+    dict
+        The merged dictionary of scores.
+    """
+    # TODO
+    merged_scores = {}
+    for id in set(scores1.keys()).union(set(scores2.keys())):
+        merged_scores[id] = {}
+        for field in weights:
+            merged_scores[id][field] = max(scores1.get(id, {}).get(field, 0), scores2.get(id, {}).get(field, 0))
+    return merged_scores
+
 
 # just for testing
 def get_movie_by_id(id: str, movies_dataset: List[Dict[str, str]]) -> Dict[str, str]:
@@ -282,7 +285,7 @@ def get_movie_by_id(id: str, movies_dataset: List[Dict[str, str]]) -> Dict[str, 
         if document["id"] == id:
             result = document
             break
-    if result is None :
+    if result is None:
         result = movies_dataset[0]
 
     result["Image_URL"] = (
@@ -294,13 +297,16 @@ def get_movie_by_id(id: str, movies_dataset: List[Dict[str, str]]) -> Dict[str, 
     )
     return result
 
+
 if __name__ == "__main__":
     search_engine = SearchEngine()
     query = "spiderman wonderland"
-    method = "ltc.lnc"
+    #method = "ltc.lnc"
     # method = "ltn.lnn"
     # method = "OkapiBM25"
+    method = "unigram"
     weights = {
+
         Indexes.STARS: 0.1,
         Indexes.GENRES: 0.05,
         Indexes.SUMMARIES: 0.85
