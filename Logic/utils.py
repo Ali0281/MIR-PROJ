@@ -7,8 +7,8 @@ from .core.indexer.indexes_enum import Indexes, Index_types
 from typing import Dict, List
 
 from Logic.core.indexer.indexes_enum import Indexes
-from Logic.core.preprocess import Preprocessor
-from Logic.core.spell_correction import SpellCorrection
+from Logic.core.utility.preprocess import Preprocessor
+from Logic.core.utility.spell_correction import (SpellCorrection)
 from Logic.core.search import SearchEngine
 
 movies_dataset = None  # TODO
@@ -34,62 +34,43 @@ def correct_text(text: str, all_documents: List[str]) -> str:
         The corrected form of the given text
     """
     # TODO: You can add any preprocessing steps here, if needed!
-    # TODO : note : seems there is nothing to do in this file for this phase but this section! there is no need for testing, just check out spell_correction.py
-    pre = Preprocessor([{}], "C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/stopwords.txt")
-    pre.preprocess()
-    data = pre.documents
-    spell_correction_obj = SpellCorrection(data)
-    return spell_correction_obj.spell_check(text)
+    spell_correction_obj = SpellCorrection(all_documents)
+    text = spell_correction_obj.spell_check(text)
+    return text
 
 
 def search(
-        query: str,
-        max_result_count: int,
-        method: str = "ltn-lnn",
-        weights = [0.3, 0.3, 0.4], # {Indexes.STARS: 0.3, Indexes.GENRES: 0.3, Indexes.SUMMARIES: 0.4},
-        should_print=False,
-        preferred_genre: str = None,
+    query: str,
+    max_result_count: int,
+    method: str = "ltn-lnn",
+    weights: list = [0.3, 0.3, 0.4],
+    should_print=False,
+    preferred_genre: str = None,
 ):
     """
     Finds relevant documents to query
 
     Parameters
     ---------------------------------------------------------------------------------------------------
-    query:
-        The query text
-
     max_result_count: Return top 'max_result_count' docs which have the highest scores.
                       notice that if max_result_count = -1, then you have to return all docs
 
+    mode: 'detailed' for searching in title and text separately.
+          'overall' for all words, and weighted by where the word appears on.
+
+    where: when mode ='detailed', when we want search query
+            in title or text not both of them at the same time.
+
     method: 'ltn.lnn' or 'ltc.lnc' or 'OkapiBM25'
 
-    weights:
-        The list, containing importance weights in the search result for each of these items:
-            Indexes.STARS: weights[0],
-            Indexes.GENRES: weights[1],
-            Indexes.SUMMARIES: weights[2],
-
-    preferred_genre:
-        A list containing preference rates for each genre. If None, the preference rates are equal.
-        (You can leave it None for now)
+    preferred_genre: A list containing preference rates for each genre. If None, the preference rates are equal.
 
     Returns
     ----------------------------------------------------------------------------------------------------
     list
     Retrieved documents with snippet
     """
-    # TODO : note : ??
-    weights = {
-        Indexes.STARS: weights[0],
-        Indexes.GENRES: weights[1],
-        Indexes.SUMMARIES: weights[2]
-    }
-    """weights = {
-        Indexes.STARS: 0.1,
-        Indexes.GENRES: 0.1,
-        Indexes.SUMMARIES: 0.8
-    }"""
-
+    weights = ...  # TODO
     return search_engine.search(
         query, method, weights, max_results=max_result_count, safe_ranking=True
     )

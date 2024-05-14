@@ -1,13 +1,13 @@
 import json
+from typing import List, Dict
 
-from Logic import utils
 from Logic.core.indexer.index_reader import Index_reader
 from Logic.core.indexer.indexes_enum import Indexes, Index_types
-from Logic.core.preprocess import Preprocessor
-from Logic.core.scorer import Scorer
+from Logic.core.utility.preprocess import Preprocessor
+from Logic.core.utility.scorer import Scorer
 import numpy as np
-from .utility import Preprocessor, Scorer
-from .indexer import Indexes, Index_types, Index_reader
+from Logic.core.utility import Preprocessor, Scorer
+from Logic.core.indexer import Indexes, Index_types, Index_reader
 
 
 class SearchEngine:
@@ -75,7 +75,7 @@ class SearchEngine:
             A list of tuples containing the document IDs and their scores sorted by their scores.
         """
 
-        preprocessor = Preprocessor([query], "C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/stopwords.txt")
+        preprocessor = Preprocessor([query], "C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/utility/stopwords.txt")
 
         query = preprocessor.preprocess()[0].split()
         print(query)
@@ -247,6 +247,52 @@ class SearchEngine:
                 merged_scores[id][field] = max(scores1.get(id, {}).get(field, 0), scores2.get(id, {}).get(field, 0))
         return merged_scores
 
+# just for testing
+def get_movie_by_id(id: str, movies_dataset: List[Dict[str, str]]) -> Dict[str, str]:
+    """
+    Get movie by its id
+
+    Parameters
+    ---------------------------------------------------------------------------------------------------
+    id: str
+        The id of the movie
+
+    movies_dataset: List[Dict[str, str]]
+        The dataset of movies
+
+    Returns
+    ----------------------------------------------------------------------------------------------------
+    dict
+        The movie with the given id
+    """
+
+    """result = movies_dataset.get(
+        id,
+        {
+            "Title": "This is movie's title",
+            "Summary": "This is a summary",
+            "URL": "https://www.imdb.com/title/tt0111161/",
+            "Cast": ["Morgan Freeman", "Tim Robbins"],
+            "Genres": ["Drama", "Crime"],
+            "Image_URL": "https://m.media-amazon.com/images/M/MV5BNDE3ODcxYzMtY2YzZC00NmNlLWJiNDMtZDViZWM2MzIxZDYwXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_.jpg",
+        },
+    )"""
+    result = None
+    for document in movies_dataset:
+        if document["id"] == id:
+            result = document
+            break
+    if result is None :
+        result = movies_dataset[0]
+
+    result["Image_URL"] = (
+        "https://m.media-amazon.com/images/M/MV5BNDE3ODcxYzMtY2YzZC00NmNlLWJiNDMtZDViZWM2MzIxZDYwXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_.jpg"
+        # a default picture for selected movies
+    )
+    result["URL"] = (
+        f"https://www.imdb.com/title/{result.get('id', 'NOT FOUND')}"  # The url pattern of IMDb movies
+    )
+    return result
 
 if __name__ == "__main__":
     search_engine = SearchEngine()
@@ -266,4 +312,4 @@ if __name__ == "__main__":
         movies_dataset = json.load(f)
 
     for r in result:
-        print(utils.get_movie_by_id(r[0], movies_dataset)["title"])
+        print(get_movie_by_id(r[0], movies_dataset)["title"])

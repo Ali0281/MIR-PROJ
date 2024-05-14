@@ -217,7 +217,7 @@ def main():
     with open("IMDB_movies.json", "r") as f:
         data = json.load(f)
     print(data[0])
-    pre = Preprocessor(data, "C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/stopwords.txt")
+    pre = Preprocessor(data, "C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/utility/stopwords.txt")
     pre.preprocess()
     #print(pre.documents[:5])
     print(pre.documents[0])

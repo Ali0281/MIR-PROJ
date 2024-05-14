@@ -2,7 +2,7 @@ import heapq
 import json
 import re
 
-from Logic.core.preprocess import Preprocessor
+from Logic.core.utility import Preprocessor
 
 
 class SpellCorrection:
@@ -38,7 +38,7 @@ class SpellCorrection:
         self.all_shingled_words, self.word_counter = self.shingling_and_counting(all_documents)
         # TODO : note : will add stopwords to skip them as we had the data preprocessed
         self.stopwords = []
-        with open("C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/stopwords.txt", 'r') as f:
+        with open("C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/utility/stopwords.txt", 'r') as f:
             for word in f:
                 self.stopwords.append(word.strip().lower())
 
@@ -196,7 +196,7 @@ def main():
         data = json.load(f)
 
     # TODO : note : in case you needed a pre proccessed input, but it seems to work poorly as the pre process proceeds to remove stopwords and such
-    pre = Preprocessor(data, "C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/stopwords.txt")
+    pre = Preprocessor(data, "C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/utility/stopwords.txt")
     pre.preprocess()
     data = pre.documents
 
