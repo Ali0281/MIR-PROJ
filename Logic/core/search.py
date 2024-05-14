@@ -55,7 +55,7 @@ class SearchEngine:
             A list of tuples containing the document IDs and their scores sorted by their scores.
         """
 
-        preprocessor = Preprocessor([query], "C:/Users/HSM/PycharmProjects/MIR-PROJ-/Logic/core/stopwords.txt")
+        preprocessor = Preprocessor([query], "C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/stopwords.txt")
 
         query = preprocessor.preprocess()[0].split()
         print(query)
@@ -210,7 +210,7 @@ if __name__ == '__main__':
     result = search_engine.search(query, method, weights, safe_ranking=False)
     # print(result)
 
-    with open("C:/Users/HSM/PycharmProjects/MIR-PROJ-/Logic/core/IMDB_movies.json", "r") as f:
+    with open("C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/IMDB_movies.json", "r") as f:
         movies_dataset = json.load(f)
 
     for r in result:
