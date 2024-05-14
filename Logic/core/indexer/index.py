@@ -472,7 +472,7 @@ def main():
     with open("../IMDB_movies.json", "r") as f:
         data = json.load(f)
 
-    pre = Preprocessor(data, "C:/Users/HSM/PycharmProjects/MIR-PROJ-/Logic/core/stopwords.txt")
+    pre = Preprocessor(data, "C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/stopwords.txt")
     pre.preprocess()
 
     m = Index(pre.documents)

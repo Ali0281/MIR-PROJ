@@ -4,7 +4,8 @@ import re
 import nltk
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
-
+#nltk.download('punkt')
+#nltk.download('wordnet')
 
 class Preprocessor:
     # TODO : if you had problem using nltk
@@ -57,7 +58,7 @@ class Preprocessor:
             return res
 
         # TODO : note : just to save and reuse
-        with open("C:/Users/HSM/PycharmProjects/MIR-PROJ-/Logic/core/preprocess.json", "r") as f:
+        with open("C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/preprocess.json", "r") as f:
             data = json.load(f)
         self.documents = data
         return data
@@ -115,7 +116,7 @@ class Preprocessor:
                 preprocessed_coo.append(self.preprocess_text(c))
             doc["countries_of_origin"] = preprocessed_coo
 
-        with open('C:/Users/HSM/PycharmProjects/MIR-PROJ-/Logic/core/preprocess.json', 'w') as f:
+        with open('C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/preprocess.json', 'w') as f:
             json.dump(self.documents, f, indent=4)
 
         return self.documents
@@ -217,7 +218,7 @@ def main():
     with open("IMDB_movies.json", "r") as f:
         data = json.load(f)
     print(data[0])
-    pre = Preprocessor(data, "C:/Users/HSM/PycharmProjects/MIR-PROJ-/Logic/core/stopwords.txt")
+    pre = Preprocessor(data, "C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/stopwords.txt")
     pre.preprocess()
     #print(pre.documents[:5])
     print(pre.documents[0])

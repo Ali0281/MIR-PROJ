@@ -33,7 +33,7 @@ class Index_reader:
         # TODO : note : i will work with absolute path for now
         absolute_path = self.path + self.index_name.value
 
-        absolute_path = "C:/Users/HSM/PycharmProjects/MIR-PROJ-/Logic/core/indexer/index/" + self.index_name.value
+        absolute_path = "C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/indexer/index/" + self.index_name.value
         if self.index_type != None:
             absolute_path = absolute_path + "_" + self.index_type.value
 
