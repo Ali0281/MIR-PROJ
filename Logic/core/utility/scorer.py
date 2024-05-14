@@ -1,7 +1,4 @@
-import logging
-
 import numpy as np
-
 
 class Scorer:
     def __init__(self, index, number_of_documents, all = None):

@@ -1,10 +1,11 @@
 import json
 from typing import Dict, List
 
-from Logic.core.indexer.indexes_enum import Indexes
-from Logic.core.preprocess import Preprocessor
-from Logic.core.spell_correction import SpellCorrection
 from Logic.core.search import SearchEngine
+from Logic.core.indexer.indexes_enum import Indexes
+from Logic.core.utility import Preprocessor
+from Logic.core.utility import SpellCorrection
+
 
 movies_dataset = None  # TODO
 with open("C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/IMDB_movies.json", "r") as f:
@@ -30,7 +31,7 @@ def correct_text(text: str, all_documents: List[str]) -> str:
     """
     # TODO: You can add any preprocessing steps here, if needed!
     # TODO : note : seems there is nothing to do in this file for this phase but this section! there is no need for testing, just check out spell_correction.py
-    pre = Preprocessor([{}], "C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/stopwords.txt")
+    pre = Preprocessor([{}], "C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/utility/stopwords.txt")
     pre.preprocess()
     data = pre.documents
     spell_correction_obj = SpellCorrection(data)

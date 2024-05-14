@@ -2,7 +2,6 @@ import json
 
 from nltk.tokenize import word_tokenize
 
-
 class Snippet:
     def __init__(self, number_of_words_on_each_side=5):
         """

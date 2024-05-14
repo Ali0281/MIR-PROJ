@@ -4,13 +4,14 @@ import re
 import nltk
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
-#nltk.download('punkt')
-#nltk.download('wordnet')
+
+# nltk.download('punkt')
+# nltk.download('wordnet')
 
 class Preprocessor:
     # TODO : if you had problem using nltk
-    #nltk.download('punkt')
-    #nltk.download('wordnet')
+    # nltk.download('punkt')
+    # nltk.download('wordnet')
 
     def __init__(self, documents: list, path):
         """
@@ -49,7 +50,6 @@ class Preprocessor:
             The preprocessed documents.
         """
 
-
         if not isinstance(self.documents[0], dict):
             res = []
             for doc in self.documents:
@@ -79,7 +79,8 @@ class Preprocessor:
 
             preprocessed_reviews = []
             for review in doc["reviews"]:
-                preprocessed_reviews.append([self.preprocess_text(review[0]), review[1]])  # TODO : do i need to use the score?
+                preprocessed_reviews.append(
+                    [self.preprocess_text(review[0]), review[1]])  # TODO : do i need to use the score?
             doc["reviews"] = preprocessed_reviews
 
             doc["title"] = self.preprocess_text(doc["title"])
@@ -213,15 +214,15 @@ class Preprocessor:
         return [word for word in filter_1 if word not in self.lemmatized_stopwords]
         # return  filter_1
 
-
 def main():
     with open("IMDB_movies.json", "r") as f:
         data = json.load(f)
     print(data[0])
-    pre = Preprocessor(data, "C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/stopwords.txt")
+    pre = Preprocessor(data, "C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/utility/stopwords.txt")
     pre.preprocess()
-    #print(pre.documents[:5])
+    # print(pre.documents[:5])
     print(pre.documents[0])
+
 
 if __name__ == '__main__':
     main()

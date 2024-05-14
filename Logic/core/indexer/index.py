@@ -3,8 +3,8 @@ import os
 import json
 import copy
 
-from Logic.core.preprocess import Preprocessor
-from indexes_enum import Indexes
+from Logic.core.utility import Preprocessor
+from Logic.core.indexer import Indexes
 
 
 class Index:
@@ -472,7 +472,7 @@ def main():
     with open("../IMDB_movies.json", "r") as f:
         data = json.load(f)
 
-    pre = Preprocessor(data, "C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/stopwords.txt")
+    pre = Preprocessor(data, "C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/utility/stopwords.txt")
     pre.preprocess()
 
     m = Index(pre.documents)

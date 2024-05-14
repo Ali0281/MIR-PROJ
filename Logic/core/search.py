@@ -1,13 +1,9 @@
 import json
 
-from Logic import utils
-from Logic.core.indexer.index_reader import Index_reader
+from Logic.core.utility import Scorer
+from Logic.core.utility import Preprocessor
+from Logic.core.indexer import Index_reader
 from Logic.core.indexer.indexes_enum import Indexes, Index_types
-from Logic.core.preprocess import Preprocessor
-from Logic.core.scorer import Scorer
-import numpy as np
-from .utility import Preprocessor, Scorer
-from .indexer import Indexes, Index_types, Index_reader
 
 
 class SearchEngine:
@@ -25,36 +21,19 @@ class SearchEngine:
         self.tiered_index = {
             Indexes.STARS: Index_reader(path, Indexes.STARS, Index_types.TIERED),
             Indexes.GENRES: Index_reader(path, Indexes.GENRES, Index_types.TIERED),
-            Indexes.SUMMARIES: Index_reader(
-                path, Indexes.SUMMARIES, Index_types.TIERED
-            ),
+            Indexes.SUMMARIES: Index_reader(path, Indexes.SUMMARIES, Index_types.TIERED),
         }
         self.document_lengths_index = {
-            Indexes.STARS: Index_reader(
-                path, Indexes.STARS, Index_types.DOCUMENT_LENGTH
-            ),
-            Indexes.GENRES: Index_reader(
-                path, Indexes.GENRES, Index_types.DOCUMENT_LENGTH
-            ),
-            Indexes.SUMMARIES: Index_reader(
-                path, Indexes.SUMMARIES, Index_types.DOCUMENT_LENGTH
-            ),
+            Indexes.STARS: Index_reader(path, Indexes.STARS, Index_types.DOCUMENT_LENGTH),
+            Indexes.GENRES: Index_reader(path, Indexes.GENRES, Index_types.DOCUMENT_LENGTH),
+            Indexes.SUMMARIES: Index_reader(path, Indexes.SUMMARIES, Index_types.DOCUMENT_LENGTH),
         }
         self.metadata_index = Index_reader(
             path, Indexes.DOCUMENTS, Index_types.METADATA
         )
 
-    def search(
-        self,
-        query,
-        method,
-        weights,
-        safe_ranking=True,
-        max_results=10,
-        smoothing_method=None,
-        alpha=0.5,
-        lamda=0.5,
-    ):
+    def search(self, query, method, weights, safe_ranking=True, max_results=10, smoothing_method=None, alpha=0.5,
+               lamda=0.5):
         """
         searches for the query in the indexes.
 
@@ -84,9 +63,8 @@ class SearchEngine:
         list
             A list of tuples containing the document IDs and their scores sorted by their scores.
         """
-        preprocessor = Preprocessor([query])
+        preprocessor = Preprocessor([query], "C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/utility/stopwords.txt")
         query = preprocessor.preprocess()[0]
-
 
         scores = {}
         if method == "unigram":
@@ -130,7 +108,7 @@ class SearchEngine:
             final_scores[doc_id] = final_score
 
     def find_scores_with_unsafe_ranking(
-        self, query, method, weights, max_results, scores
+            self, query, method, weights, max_results, scores
     ):
         """
         Finds the scores of the documents using the unsafe ranking method using the tiered index.
@@ -166,14 +144,12 @@ class SearchEngine:
                         iter_scores[doc_id] = {}
                     iter_scores[doc_id][field] = score
 
-
-            #scores = self.merge_scores(scores, iter_scores, weights)
+            # scores = self.merge_scores(scores, iter_scores, weights)
 
             for id in set(scores.keys()).union(set(iter_scores.keys())):
                 if id not in scores: scores[id] = {}
                 for field in weights:
                     scores[id][field] = max(scores.get(id, {}).get(field, 0), iter_scores.get(id, {}).get(field, 0))
-
 
             if len(scores) >= max_results: break
 
@@ -210,7 +186,7 @@ class SearchEngine:
             pass
 
     def find_scores_with_unigram_model(
-        self, query, smoothing_method, weights, scores, alpha=0.5, lamda=0.5
+            self, query, smoothing_method, weights, scores, alpha=0.5, lamda=0.5
     ):
         """
         Calculates the scores for each document based on the unigram model.
@@ -259,6 +235,53 @@ class SearchEngine:
         return merged_scores
 
 
+# temp function for testing
+def get_movie_by_id(id, metadata_index):
+    """
+    Get movie by its id
+
+    Parameters
+    ---------------------------------------------------------------------------------------------------
+    id: str
+        The id of the movie
+
+    movies_dataset: List[Dict[str, str]]
+        The dataset of movies
+
+    Returns
+    ----------------------------------------------------------------------------------------------------
+    dict
+        The movie with the given id
+    """
+
+    """result = movies_dataset.get(
+        id,
+        {
+            "Title": "This is movie's title",
+            "Summary": "This is a summary",
+            "URL": "https://www.imdb.com/title/tt0111161/",
+            "Cast": ["Morgan Freeman", "Tim Robbins"],
+            "Genres": ["Drama", "Crime"],
+            "Image_URL": "https://m.media-amazon.com/images/M/MV5BNDE3ODcxYzMtY2YzZC00NmNlLWJiNDMtZDViZWM2MzIxZDYwXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_.jpg",
+        },
+    )"""
+    result = None
+    for document in movies_dataset:
+        if document["id"] == id:
+            result = document
+            break
+    if result is None :
+        result = movies_dataset[0]
+
+    result["Image_URL"] = (
+        "https://m.media-amazon.com/images/M/MV5BNDE3ODcxYzMtY2YzZC00NmNlLWJiNDMtZDViZWM2MzIxZDYwXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_.jpg"
+        # a default picture for selected movies
+    )
+    result["URL"] = (
+        f"https://www.imdb.com/title/{result.get('id', 'NOT FOUND')}"  # The url pattern of IMDb movies
+    )
+    return result
+
 if __name__ == "__main__":
     search_engine = SearchEngine()
     query = "spiderman wonderland"
@@ -277,4 +300,5 @@ if __name__ == "__main__":
         movies_dataset = json.load(f)
 
     for r in result:
-        print(utils.get_movie_by_id(r[0], movies_dataset)["title"])
+        print(get_movie_by_id(r[0], movies_dataset)["title"])
+

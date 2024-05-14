@@ -30,4 +30,3 @@ class BasicClassifier:
             The percentage of positive reviews
         """
         pass
-
