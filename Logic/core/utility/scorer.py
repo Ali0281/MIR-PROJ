@@ -1,5 +1,3 @@
-import logging
-
 import numpy as np
 
 
@@ -26,7 +24,7 @@ class Scorer:
         self.idf = {}
         self.N = number_of_documents
 
-    def get_list_of_documents(self, query):
+    def get_list_of_documents(self,query):
         """
         Returns a list of documents that contain at least one of the terms in the query.
 
@@ -53,7 +51,7 @@ class Scorer:
             if term in self.index.keys():
                 list_of_documents.extend(self.index[term].keys())
         return list(set(list_of_documents))
-
+    
     def get_idf(self, term):
         """
         Returns the inverse document frequency of a term.
@@ -109,6 +107,22 @@ class Scorer:
         return result
 
     def compute_scores_with_vector_space_model(self, query, method):
+        """
+        compute scores with vector space model
+
+        Parameters
+        ----------
+        query: List[str]
+            The query to be scored
+        method : str ((n|l)(n|t)(n|c).(n|l)(n|t)(n|c))
+            The method to use for searching.
+
+        Returns
+        -------
+        dict
+            A dictionary of the document IDs and their scores.
+        """
+
         # TODO
         scores = {}
         query_tfs = self.get_query_tfs(query)
@@ -117,6 +131,33 @@ class Scorer:
                                                                     method.split(".")[1])
         return scores
 
+    def get_vector_space_model_score(
+        self, query, query_tfs, document_id, document_method, query_method
+    ):
+        """
+        Returns the Vector Space Model score of a document for a query.
+
+        Parameters
+        ----------
+        query: List[str]
+            The query to be scored
+        query_tfs : dict
+            The term frequencies of the terms in the query.
+        document_id : str
+            The document to calculate the score for.
+        document_method : str (n|l)(n|t)(n|c)
+            The method to use for the document.
+        query_method : str (n|l)(n|t)(n|c)
+            The method to use for the query.
+
+        Returns
+        -------
+        float
+            The Vector Space Model score of the document for the query.
+        """
+
+        # TODO
+        pass
     def get_vector_space_model_score(self, query, query_tfs, document_id, document_method, query_method):
         # TODO
         d_vec, q_vec = [], []
@@ -190,6 +231,70 @@ class Scorer:
             The Okapi BM25 score of the document for the query.
         """
         # TODO
+        pass
+
+    def compute_scores_with_unigram_model(
+        self, query, smoothing_method, document_lengths=None, alpha=0.5, lamda=0.5
+    ):
+        """
+        Calculates the scores for each document based on the unigram model.
+
+        Parameters
+        ----------
+        query : str
+            The query to search for.
+        smoothing_method : str (bayes | naive | mixture)
+            The method used for smoothing the probabilities in the unigram model.
+        document_lengths : dict
+            A dictionary of the document lengths. The keys are the document IDs, and the values are
+            the document's length in that field.
+        alpha : float, optional
+            The parameter used in bayesian smoothing method. Defaults to 0.5.
+        lamda : float, optional
+            The parameter used in some smoothing methods to balance between the document
+            probability and the collection probability. Defaults to 0.5.
+
+        Returns
+        -------
+        float
+            A dictionary of the document IDs and their scores.
+        """
+
+        # TODO
+        pass
+
+    def compute_score_with_unigram_model(
+        self, query, document_id, smoothing_method, document_lengths, alpha, lamda
+    ):
+        """
+        Calculates the scores for each document based on the unigram model.
+
+        Parameters
+        ----------
+        query : str
+            The query to search for.
+        document_id : str
+            The document to calculate the score for.
+        smoothing_method : str (bayes | naive | mixture)
+            The method used for smoothing the probabilities in the unigram model.
+        document_lengths : dict
+            A dictionary of the document lengths. The keys are the document IDs, and the values are
+            the document's length in that field.
+        alpha : float, optional
+            The parameter used in bayesian smoothing method. Defaults to 0.5.
+        lamda : float, optional
+            The parameter used in some smoothing methods to balance between the document
+            probability and the collection probability. Defaults to 0.5.
+
+        Returns
+        -------
+        float
+            The Unigram score of the document for the query.
+        """
+
+        # TODO
+        pass
+
         # TODO : note : had some help from : https://github.com/yutayamazaki/okapi-bm25/blob/master/okapi_bm25/bm25.py
         score = 0
         for term in query:
