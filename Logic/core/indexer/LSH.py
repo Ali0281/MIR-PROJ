@@ -253,7 +253,7 @@ def main():
     # TODO : note : it works with 1 score. just used first summary for lower time, skiped null summaries and they match together !
     with open('LSHFakeData.json', 'r') as f:
         data = json.load(f)
-    with open("IMDB_movies_2.json", "r") as f:
+    with open("C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/preprocess.json", "r") as f:
         data1 = json.load(f)
 
     data.extend(data1)

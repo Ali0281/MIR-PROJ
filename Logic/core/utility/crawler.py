@@ -208,7 +208,7 @@ class IMDbCrawler:
             'languages': None,  # List[str]
             'countries_of_origin': None,  # List[str]
             'summaries': None,  # List[str]
-            'synopsis': None,  # List[str]
+            'synposis': None,  # List[str]
             'reviews': None,  # List[List[str]]
         }
 
@@ -285,7 +285,7 @@ class IMDbCrawler:
         if len(movie["languages"]) == 0: counter += 1
         if len(movie["countries_of_origin"]) == 0: counter += 1
         if len(movie["summaries"]) == 0: counter += 1
-        if len(movie["synopsis"]) == 0: counter += 1
+        if len(movie["synposis"]) == 0: counter += 1
         if len(movie["reviews"]) == 0: counter += 1
         if counter < 4:
             self.movies.append(movie)
@@ -349,7 +349,7 @@ class IMDbCrawler:
         movie['countries_of_origin'] = self.get_countries_of_origin(soup)
         movie['rating'] = self.get_rating(soup)
         movie['summaries'] = self.get_summaries(soup_summaries)
-        movie['synopsis'] = self.get_synopsis(soup_summaries)
+        movie['synposis'] = self.get_synposis(soup_summaries)
         movie['reviews'] = self.get_reviews_with_scores(soup_reviews)
 
         """except Exception as e:
@@ -598,9 +598,9 @@ class IMDbCrawler:
         finally:
             return summaries
 
-    def get_synopsis(self, soup):
+    def get_synposis(self, soup):
         """
-        Get the synopsis of the movie from the soup
+        Get the synposis of the movie from the soup
 
         Parameters
         ----------
@@ -609,19 +609,19 @@ class IMDbCrawler:
         Returns
         ----------
         List[str]
-            The synopsis of the movie
+            The synposis of the movie
         """
         # TODO √
-        synopsis = []
+        synposis = []
         try:
-            synopsis.append(
+            synposis.append(
                 soup.find_all("li", {"class": "ipc-metadata-list__item", "data-testid": "list-item"})[-1].text)
-            if len(synopsis) == 0: raise Exception("unknown related field")
-            # print(synopsis)
+            if len(synposis) == 0: raise Exception("unknown related field")
+            # print(synposis)
         except Exception as e:
-            print(f"failed to get synopsis, exception : {e}")
+            print(f"failed to get synposis, exception : {e}")
         finally:
-            return synopsis
+            return synposis
 
     def get_reviews_with_scores(self, soup):
         """

@@ -1,10 +1,9 @@
-from index_reader import Index_reader
-from indexes_enum import Indexes, Index_types
+from Logic.core.indexer.indexes_enum import Indexes, Index_types
 import json
 
 
 class Metadata_index:
-    def __init__(self, path='C:/Users/HSM/PycharmProjects/MIR-PROJ-/Logic/core/indexer/index/documents_index.json'):
+    def __init__(self, path='C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/indexer/index/documents_index.json'):
         """
         Initializes the Metadata_index.
 

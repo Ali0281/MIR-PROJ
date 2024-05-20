@@ -106,7 +106,7 @@ class Snippet:
 
 
 def main():
-    with open("IMDB_movies.json", "r") as f:
+    with open("C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/preprocess.json", "r") as f:
         data = json.load(f)
 
     for i in data:

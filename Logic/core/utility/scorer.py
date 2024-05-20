@@ -1,10 +1,10 @@
-import logging
+import json
 
 import numpy as np
 
 
 class Scorer:
-    def __init__(self, index, number_of_documents, all = None):
+    def __init__(self, index, number_of_documents, all=None):
         """
         Initializes the Scorer.
 
@@ -15,8 +15,7 @@ class Scorer:
         number_of_documents : int
             The number of documents in the index.
         """
-
-        if all is None :
+        if all is None:
             self.index = index.get_index()
             self.all = None
         else:
@@ -80,7 +79,7 @@ class Scorer:
                 # TODO : note : can change this
                 idf_ = np.log2(self.N / (df + 1))
                 self.idf[term] = idf_
-            else :
+            else:
                 df = len(self.all.get(term, dict()))
                 # TODO : note : can change this
                 idf_ = np.log2(self.N / (df + 1))
@@ -109,6 +108,21 @@ class Scorer:
         return result
 
     def compute_scores_with_vector_space_model(self, query, method):
+        """
+        compute scores with vector space model
+
+        Parameters
+        ----------
+        query: List[str]
+            The query to be scored
+        method : str ((n|l)(n|t)(n|c).(n|l)(n|t)(n|c))
+            The method to use for searching.
+
+        Returns
+        -------
+        dict
+            A dictionary of the document IDs and their scores.
+        """
         # TODO
         scores = {}
         query_tfs = self.get_query_tfs(query)
@@ -118,6 +132,27 @@ class Scorer:
         return scores
 
     def get_vector_space_model_score(self, query, query_tfs, document_id, document_method, query_method):
+        """
+        Returns the Vector Space Model score of a document for a query.
+
+        Parameters
+        ----------
+        query: List[str]
+            The query to be scored
+        query_tfs : dict
+            The term frequencies of the terms in the query.
+        document_id : str
+            The document to calculate the score for.
+        document_method : str (n|l)(n|t)(n|c)
+            The method to use for the document.
+        query_method : str (n|l)(n|t)(n|c)
+            The method to use for the query.
+
+        Returns
+        -------
+        float
+            The Vector Space Model score of the document for the query.
+        """
         # TODO
         d_vec, q_vec = [], []
         for term in query:
@@ -204,7 +239,101 @@ class Scorer:
                 dl = 0
             else:
                 dl = document_lengths[document_id]
-            if tf + k1 * (1 - b + (b * dl / average_document_field_length)) == 0 : continue
+            if tf + k1 * (1 - b + (b * dl / average_document_field_length)) == 0: continue
             score += idf * (tf * (k1 + 1)) / (tf + k1 * (1 - b + (b * dl / average_document_field_length)))
 
+        return score
+
+    def compute_scores_with_unigram_model(
+            self, query, smoothing_method, document_lengths=None, alpha=0.5, lamda=0.5, type=""
+    ):
+        """
+        Calculates the scores for each document based on the unigram model.
+
+        Parameters
+        ----------
+        query : str
+            The query to search for.
+        smoothing_method : str (bayes | naive | mixture)
+            The method used for smoothing the probabilities in the unigram model.
+        document_lengths : dict
+            A dictionary of the document lengths. The keys are the document IDs, and the values are
+            the document's length in that field.
+        alpha : float, optional
+            The parameter used in bayesian smoothing method. Defaults to 0.5.
+        lamda : float, optional
+            The parameter used in some smoothing methods to balance between the document
+            probability and the collection probability. Defaults to 0.5.
+
+        Returns
+        -------
+        float
+            A dictionary of the document IDs and their scores.
+        """
+        # TODO
+        scores = {}
+        for id in self.get_list_of_documents(query):
+            scores[id] = self.get_score_with_unigram_model(query, id, smoothing_method, document_lengths, alpha, lamda,
+                                                           type)
+        return scores
+
+    def get_score_with_unigram_model(self, query, document_id, smoothing_method, document_lengths, alpha, lamda,
+                                     type):
+        """
+        Calculates the scores for each document based on the unigram model.
+
+        Parameters
+        ----------
+        query : str
+            The query to search for.
+        document_id : str
+            The document to calculate the score for.
+        smoothing_method : str (bayes | naive | mixture)
+            The method used for smoothing the probabilities in the unigram model.
+        document_lengths : dict
+            A dictionary of the document lengths. The keys are the document IDs, and the values are
+            the document's length in that field.
+        alpha : float, optional
+            The parameter used in bayesian smoothing method. Defaults to 0.5.
+        lamda : float, optional
+            The parameter used in some smoothing methods to balance between the document
+            probability and the collection probability. Defaults to 0.5.
+
+        Returns
+        -------
+        float
+            The Unigram score of the document for the query.
+        """
+        CF, count = None, None
+        if type == "genres":
+            with open("C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/indexer/index/genres_corpus_index.json",
+                      "r") as f:
+                CF, count = json.load(f)
+        elif type == "stars":
+            with open("C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/indexer/index/stars_corpus_index.json",
+                      "r") as f:
+                CF, count = json.load(f)
+        elif type == "summaries":
+            with open("C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/indexer/index/summaries_corpus_index.json",
+                      "r") as f:
+                CF, corpus_count = json.load(f)
+        else:
+            raise Exception("wrong type for unigram model")
+
+        score = 1
+        word_count = document_lengths.get(document_id, 0)
+        if word_count == 0 or corpus_count == 0: raise Exception("zero value for doc length for unigram model")
+
+        for term in query:
+            dtf = self.index.get(term, {}).get(document_id, 0)
+            tCF = CF.get(term, 0)
+
+            if smoothing_method == "bayes":
+                score *= ((dtf + alpha * (tCF / corpus_count)) / (word_count + alpha))
+            elif smoothing_method == "naive":
+                score *= (dtf / word_count)
+            elif smoothing_method == "mixture":
+                score *= lamda * (dtf / word_count) + (1 - lamda) * ((tCF / corpus_count))
+            else :
+                raise Exception("no smoothing method")
         return score

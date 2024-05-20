@@ -3,8 +3,8 @@ import os
 import json
 import copy
 
-from Logic.core.preprocess import Preprocessor
-from indexes_enum import Indexes
+from Logic.core.utility import Preprocessor
+from Logic.core.indexer.indexes_enum import Indexes
 
 
 class Index:
@@ -292,9 +292,8 @@ class Index:
         ----------
         path : str
             Path to store the file
-        index_type: str or None
-            type of index we want to store (documents, stars, genres, summaries)
-            if None store tiered index
+        index_name: str
+            name of index we want to store (documents, stars, genres, summaries)
         """
         # TODO :
         if not os.path.exists(path):
@@ -472,7 +471,7 @@ def main():
     with open("../IMDB_movies.json", "r") as f:
         data = json.load(f)
 
-    pre = Preprocessor(data, "C:/Users/HSM/PycharmProjects/MIR-PROJ-/Logic/core/stopwords.txt")
+    pre = Preprocessor(data, "C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/utility/stopwords.txt")
     pre.preprocess()
 
     m = Index(pre.documents)

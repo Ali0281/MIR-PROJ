@@ -2,7 +2,7 @@ import heapq
 import json
 import re
 
-from Logic.core.preprocess import Preprocessor
+from Logic.core.utility import Preprocessor
 
 
 class SpellCorrection:
@@ -21,13 +21,13 @@ class SpellCorrection:
         documents_as_string = []
         # TODO : note : so we are dealing with a list of strings as input of the class
         for doc in all_documents:
-            # TODO : note : i will just use the summaries / reviews / synopsis as they have the most text available
+            # TODO : note : i will just use the summaries / reviews / synposis as they have the most text available
             documents_as_string.append(
                 " ".join(doc["summaries"]) + " " + (" ".join(doc["stars"]) + " ") * 100 + " " + (" ".join(
                     doc["directors"]) + " ") * 100 + " " + (" ".join(doc["writers"]) + " ") * 100 + (
                             doc["title"] + " ") * 100)
             # print(documents_as_string[-1])
-            # + " ".join([review[0] for review in doc["reviews"]]) + " ".join(doc["synopsis"]))
+            # + " ".join([review[0] for review in doc["reviews"]]) + " ".join(doc["synposis"]))
 
         self.save = all_documents
         self.all_documents = documents_as_string
@@ -38,7 +38,7 @@ class SpellCorrection:
         self.all_shingled_words, self.word_counter = self.shingling_and_counting(all_documents)
         # TODO : note : will add stopwords to skip them as we had the data preprocessed
         self.stopwords = []
-        with open("C:/Users/HSM/PycharmProjects/MIR-PROJ-/Logic/core/stopwords.txt", 'r') as f:
+        with open("C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/utility/stopwords.txt", 'r') as f:
             for word in f:
                 self.stopwords.append(word.strip().lower())
 
@@ -192,11 +192,11 @@ class SpellCorrection:
 
 
 def main():
-    with open("IMDB_movies.json", "r") as f:
+    with open("C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/preprocess.json", "r") as f:
         data = json.load(f)
 
     # TODO : note : in case you needed a pre proccessed input, but it seems to work poorly as the pre process proceeds to remove stopwords and such
-    pre = Preprocessor(data, "C:/Users/HSM/PycharmProjects/MIR-PROJ-/Logic/core/stopwords.txt")
+    pre = Preprocessor(data, "C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/utility/stopwords.txt")
     pre.preprocess()
     data = pre.documents
 

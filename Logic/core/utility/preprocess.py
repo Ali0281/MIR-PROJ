@@ -8,8 +8,8 @@ from nltk.stem import WordNetLemmatizer
 
 class Preprocessor:
     # TODO : if you had problem using nltk
-    #nltk.download('punkt')
-    #nltk.download('wordnet')
+    # nltk.download('punkt')
+    # nltk.download('wordnet')
 
     def __init__(self, documents: list, path):
         """
@@ -48,7 +48,6 @@ class Preprocessor:
             The preprocessed documents.
         """
 
-
         if not isinstance(self.documents[0], dict):
             res = []
             for doc in self.documents:
@@ -57,65 +56,75 @@ class Preprocessor:
             return res
 
         # TODO : note : just to save and reuse
-        with open("C:/Users/HSM/PycharmProjects/MIR-PROJ-/Logic/core/preprocess.json", "r") as f:
+        with open("C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/preprocess.json", "r") as f:
             data = json.load(f)
         self.documents = data
         return data
 
         for doc in self.documents:
-            # TODO : note : only give attention to <first_page_summary>, <summaries>, <synopsis>, <reviews>
-            doc["first_page_summary"] = self.preprocess_text(doc["first_page_summary"])
+            # TODO : note : only give attention to <first_page_summary>, <summaries>, <synposis>, <reviews>
+            doc["first_page_summary"] = self.preprocess_text(doc["first_page_summary"]) if doc["first_page_summary"] is not None else ""
 
             preprocessed_summaries = []
-            for summary in doc["summaries"]:
-                preprocessed_summaries.append(self.preprocess_text(summary))
+            if doc["summaries"] is not None:
+                for summary in doc["summaries"]:
+                    preprocessed_summaries.append(self.preprocess_text(summary))
             doc["summaries"] = preprocessed_summaries
 
-            preprocessed_synopsis = []
-            for synopsis in doc["synopsis"]:
-                preprocessed_synopsis.append(self.preprocess_text(synopsis))
-            doc["synopsis"] = preprocessed_synopsis
+            preprocessed_synposis = []
+            if doc["synposis"] is not None:
+                for synposis in doc["synposis"]:
+                    preprocessed_synposis.append(self.preprocess_text(synposis))
+            doc["synposis"] = preprocessed_synposis
 
             preprocessed_reviews = []
-            for review in doc["reviews"]:
-                preprocessed_reviews.append([self.preprocess_text(review[0]), review[1]])  # TODO : do i need to use the score?
+            if doc["reviews"] is not None:
+                for review in doc["reviews"]:
+                    preprocessed_reviews.append(
+                        [self.preprocess_text(review[0]), review[1]])  # TODO : do i need to use the score?
             doc["reviews"] = preprocessed_reviews
 
-            doc["title"] = self.preprocess_text(doc["title"])
+            doc["title"] = self.preprocess_text(doc["title"]) if doc["title"] is not None else ""
 
-            doc["release_year"] = self.preprocess_text(doc["release_year"])
+            doc["release_year"] = self.preprocess_text(doc["release_year"]) if doc["release_year"] is not None else ""
 
             preprocessed_stars = []
-            for star in doc["stars"]:
-                preprocessed_stars.append(self.preprocess_text(star))
+            if doc["stars"] is not None:
+                for star in doc["stars"]:
+                    preprocessed_stars.append(self.preprocess_text(star))
             doc["stars"] = preprocessed_stars
 
             preprocessed_writers = []
-            for writer in doc["writers"]:
-                preprocessed_writers.append(self.preprocess_text(writer))
+            if doc["writers"] is not None:
+                for writer in doc["writers"]:
+                    preprocessed_writers.append(self.preprocess_text(writer))
             doc["writers"] = preprocessed_writers
 
             preprocessed_directors = []
-            for director in doc["directors"]:
-                preprocessed_directors.append(self.preprocess_text(director))
+            if doc["directors"] is not None:
+                for director in doc["directors"]:
+                    preprocessed_directors.append(self.preprocess_text(director))
             doc["directors"] = preprocessed_directors
 
             preprocessed_genres = []
-            for genre in doc["genres"]:
-                preprocessed_genres.append(self.preprocess_text(genre))
+            if doc["genres"] is not None:
+                for genre in doc["genres"]:
+                    preprocessed_genres.append(self.preprocess_text(genre))
             doc["genres"] = preprocessed_genres
 
             preprocessed_languages = []
-            for language in doc["languages"]:
-                preprocessed_languages.append(self.preprocess_text(language))
+            if doc["languages"] is not None:
+                for language in doc["languages"]:
+                    preprocessed_languages.append(self.preprocess_text(language))
             doc["languages"] = preprocessed_languages
 
             preprocessed_coo = []
-            for c in doc["countries_of_origin"]:
-                preprocessed_coo.append(self.preprocess_text(c))
+            if doc["countries_of_origin"] is not None:
+                for c in doc["countries_of_origin"]:
+                    preprocessed_coo.append(self.preprocess_text(c))
             doc["countries_of_origin"] = preprocessed_coo
 
-        with open('C:/Users/HSM/PycharmProjects/MIR-PROJ-/Logic/core/preprocess.json', 'w') as f:
+        with open('C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/preprocess.json', 'w') as f:
             json.dump(self.documents, f, indent=4)
 
         return self.documents
@@ -214,13 +223,14 @@ class Preprocessor:
 
 
 def main():
-    with open("IMDB_movies.json", "r") as f:
+    with open("C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/IMDB_movies.json", "r") as f:
         data = json.load(f)
     print(data[0])
-    pre = Preprocessor(data, "C:/Users/HSM/PycharmProjects/MIR-PROJ-/Logic/core/stopwords.txt")
+    pre = Preprocessor(data, "C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/utility/stopwords.txt")
     pre.preprocess()
-    #print(pre.documents[:5])
+    # print(pre.documents[:5])
     print(pre.documents[0])
+
 
 if __name__ == '__main__':
     main()

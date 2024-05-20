@@ -47,7 +47,7 @@ expected_fields = {
     "languages": List[str],
     "countries_of_origin": List[str],
     "summaries": List[str],
-    "synopsis": List[str],
+    "synposis": List[str],
     "reviews": List[List[str]],
 }
 
