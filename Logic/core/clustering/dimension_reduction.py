@@ -1,11 +1,12 @@
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
+from wandb.apis.importers import wandb
 
 
 class DimensionReduction:
 
     def __init__(self):
-        self.pca = PCA()
+        self.pca = PCA
         self.tsne_2d = TSNE(n_components=2, random_state=42)
 
     def pca_reduce_dimension(self, embeddings, n_components):
@@ -21,7 +22,8 @@ class DimensionReduction:
         -------
             list: A list of reduced embeddings.
         """
-        pass
+        if n_components is not None: self.pca = PCA(n_components=n_components)
+        return self.pca.fit_transform(embeddings)
 
     def convert_to_2d_tsne(self, emb_vecs):
         """
@@ -35,7 +37,7 @@ class DimensionReduction:
         --------
             list: A list of 2D vectors.
         """
-        pass
+        return self.tsne_2d.fit_transform(emb_vecs)
 
     def wandb_plot_2d_tsne(self, data, project_name, run_name):
         """ This function performs t-SNE (t-Distributed Stochastic Neighbor Embedding) dimensionality reduction on the input data and visualizes the resulting 2D embeddings by logging a scatter plot to Weights & Biases (wandb).

@@ -9,7 +9,7 @@ from scipy.cluster.hierarchy import dendrogram, linkage
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.cluster import KMeans
 from collections import Counter
-from .clustering_metrics import *
+from Logic.core.clustering.clustering_metrics import *
 
 
 class ClusteringUtils:
@@ -32,7 +32,9 @@ class ClusteringUtils:
             1. A list containing the cluster centers.
             2. A list containing the cluster index for each input vector.
         """
-        pass
+        KM = KMeans(n_clusters=n_clusters, random_state=0, max_iter=max_iter)
+        KM.fit(emb_vecs)
+        return tuple(KM.cluster_centers_, KM.labels_)
 
     def get_most_frequent_words(self, documents: List[str], top_n: int = 10) -> List[Tuple[str, int]]:
         """
@@ -50,7 +52,10 @@ class ClusteringUtils:
         List[Tuple[str, int]]
             A list of tuples, where each tuple contains a word and its frequency, sorted in descending order of frequency.
         """
-        pass
+        counter = Counter()
+        for i in documents:
+            counter.update(i.split())
+        return counter.most_common(top_n)
 
     def cluster_kmeans_WCSS(self, emb_vecs: List, n_clusters: int) -> Tuple[List, List, float]:
         """ This function performs K-means clustering on a list of input vectors and calculates the Within-Cluster Sum of Squares (WCSS) for the resulting clusters.
@@ -76,7 +81,9 @@ class ClusteringUtils:
             2) A list containing the cluster index for each input vector.
             3) The Within-Cluster Sum of Squares (WCSS) value for the clustering.
         """
-        pass
+        KM = KMeans(n_clusters=n_clusters, random_state=0)
+        KM.fit(emb_vecs)
+        return tuple(KM.cluster_centers_, KM.labels_, KM.inertia_)
 
     def cluster_hierarchical_single(self, emb_vecs: List) -> List:
         """
@@ -92,7 +99,9 @@ class ClusteringUtils:
         List
             A list containing the cluster index for each input vector.
         """
-        pass
+        KM = AgglomerativeClustering(linkage='single')
+        KM.fit(emb_vecs)
+        return KM.labels_
 
     def cluster_hierarchical_complete(self, emb_vecs: List) -> List:
         """
@@ -108,7 +117,9 @@ class ClusteringUtils:
         List
             A list containing the cluster index for each input vector.
         """
-        pass
+        KM = AgglomerativeClustering(linkage='complete')
+        KM.fit(emb_vecs)
+        return KM.labels_
 
     def cluster_hierarchical_average(self, emb_vecs: List) -> List:
         """
@@ -124,7 +135,9 @@ class ClusteringUtils:
         List
             A list containing the cluster index for each input vector.
         """
-        pass
+        KM = AgglomerativeClustering(linkage='average')
+        KM.fit(emb_vecs)
+        return KM.labels_
 
     def cluster_hierarchical_ward(self, emb_vecs: List) -> List:
         """
@@ -140,7 +153,9 @@ class ClusteringUtils:
         List
             A list containing the cluster index for each input vector.
         """
-        pass
+        KM = AgglomerativeClustering(linkage='ward')
+        KM.fit(emb_vecs)
+        return KM.labels_
 
     def visualize_kmeans_clustering_wandb(self, data, n_clusters, project_name, run_name):
         """ This function performs K-means clustering on the input data and visualizes the resulting clusters by logging a scatter plot to Weights & Biases (wandb).
@@ -307,3 +322,11 @@ class ClusteringUtils:
         wandb.log({"Elbow Method": wandb.Image(plt)})
 
         plt.close()
+
+
+if __name__ == '__main__':
+    word_counts = Counter()
+    for doc in ["ali ali lailisdnl sakjdna", "jsad ajns jknajksn dkjnasn"]:
+        words = doc.split()  # Split the document into words based on whitespace
+        word_counts.update(words)
+    print(word_counts.most_common(3))
