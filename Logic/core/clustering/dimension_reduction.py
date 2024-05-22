@@ -1,3 +1,4 @@
+from matplotlib import pyplot as plt
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from wandb.apis.importers import wandb
@@ -70,15 +71,18 @@ class DimensionReduction:
 
         # Perform t-SNE dimensionality reduction
         # TODO
+        tsne = self.tsne_2d.fit_transform(data)
 
         # Plot the t-SNE embeddings
         # TODO
+        plt.scatter(tsne[:, 0], tsne[:, 1], c='black')
 
         # Log the plot to wandb
         wandb.log({"t-SNE 2D Embeddings": wandb.Image(plt)})
 
         # Close the plot display window if needed (optional)
         # TODO
+        plt.close()
 
     import matplotlib.pyplot as plt
 

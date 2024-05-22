@@ -11,6 +11,8 @@ from sklearn.cluster import KMeans
 from collections import Counter
 from Logic.core.clustering.clustering_metrics import *
 
+from Logic.core.clustering.dimension_reduction import *
+
 
 class ClusteringUtils:
 
@@ -186,10 +188,11 @@ class ClusteringUtils:
         None
         """
         # Initialize wandb
-        run = wandb.init(project=project_name, name=run_name)
+        # run = wandb.init(project=project_name, name=run_name)
 
         # Perform K-means clustering
-        # TODO
+        # TODO : ?!?!?!?
+        centers, labels = self.cluster_kmeans(data, n_clusters)
 
         # Plot the clusters
         # TODO
@@ -199,7 +202,8 @@ class ClusteringUtils:
 
         # Close the plot display window if needed (optional)
         # TODO
-        pass
+        DR = DimensionReduction()
+        DR.wandb_plot_2d_tsne(data, project_name, run_name)
 
     def wandb_plot_hierarchical_clustering_dendrogram(self, data, project_name, linkage_method, run_name):
         """ This function performs hierarchical clustering on the provided data and generates a dendrogram plot, which is then logged to Weights & Biases (wandb).
@@ -232,10 +236,33 @@ class ClusteringUtils:
         run = wandb.init(project=project_name, name=run_name)
         # Perform hierarchical clustering
         # TODO
+        labels = None
+        if linkage_method == "ward":
+            labels = self.cluster_hierarchical_ward(data)
+        elif linkage_method == "average":
+            labels = self.cluster_hierarchical_average(data)
+        elif linkage_method == "complete":
+            labels = self.cluster_hierarchical_complete(data)
+        elif linkage_method == "single":
+            labels = self.cluster_hierarchical_single(data)
+        else:
+            raise Exception("Invalid linkage method")
 
         # Create linkage matrix for dendrogram
         # TODO
-        pass
+        linkage_ = linkage(data, method=linkage_method)
+
+        # Generate a dendrogram plot using the linkage matrix.
+        # TODO
+        dendrogram_ = dendrogram(linkage_)
+
+        # Log the dendrogram plot as an image to the wandb run.
+        # TODO
+        wandb.log({"H clustering": wandb.Image(plt.imsave('HC dendrogram.png', dendrogram_))})
+
+        # Close the plot display window to conserve system resources.
+        # TODO
+        plt.close()
 
     def plot_kmeans_cluster_scores(self, embeddings: List, true_labels: List, k_values: List[int], project_name=None,
                                    run_name=None):
@@ -265,20 +292,28 @@ class ClusteringUtils:
         # Calculating Silhouette Scores and Purity Scores for different values of k
         for k in k_values:
             # TODO
+            centers, labels = self.cluster_kmeans(embeddings, k)
 
             # Using implemented metrics in clustering_metrics, get the score for each k in k-means clustering
             # and visualize it.
             # TODO
-            pass
+            silhouette_scores.append(silhouette_score(embeddings, labels))
+            purity_scores.append(purity_scores(true_labels, labels))
 
-        # Plotting the scores
+            # Plotting the scores
         # TODO
+        plt.plot(k_values, silhouette_scores, label='S score')
+        plt.plot(k_values, purity_scores, label='P score')
+        plt.legend()
 
         # Logging the plot to wandb
         if project_name and run_name:
             import wandb
             run = wandb.init(project=project_name, name=run_name)
             wandb.log({"Cluster Scores": plt})
+
+        plt.show()
+        plt.close()
 
     def visualize_elbow_method_wcss(self, embeddings: List, k_values: List[int], project_name: str, run_name: str):
         """ This function implements the elbow method to determine the optimal number of clusters for K-means clustering based on the Within-Cluster Sum of Squares (WCSS).
@@ -313,10 +348,11 @@ class ClusteringUtils:
         wcss_values = []
         for k in k_values:
             # TODO
-            pass
+            wcss_values.append(self.cluster_kmeans_WCSS(embeddings, k)[2])
 
         # Plot the elbow method
         # TODO
+        plt.plot(k_values, wcss_values, label='WCSS')
 
         # Log the plot to wandb
         wandb.log({"Elbow Method": wandb.Image(plt)})
@@ -325,8 +361,4 @@ class ClusteringUtils:
 
 
 if __name__ == '__main__':
-    word_counts = Counter()
-    for doc in ["ali ali lailisdnl sakjdna", "jsad ajns jknajksn dkjnasn"]:
-        words = doc.split()  # Split the document into words based on whitespace
-        word_counts.update(words)
-    print(word_counts.most_common(3))
+    pass
