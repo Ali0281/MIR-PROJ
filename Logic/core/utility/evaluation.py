@@ -337,7 +337,7 @@ class Evaluation:
         """
         # source : https://docs.wandb.ai/guides/track/log
         # TODO: Log the evaluation metrics using Wandb
-        wandb.login()
+        wandb.login(key="63279235fbf3eb23c36ab8ad68bb00ffae0a06f9")
         wandb.init(project=self.name)
 
         wandb.log({"precision": precision, "recall": recall, "f1": f1, "ap": ap, "map": map, "dcg": dcg, "ndcg": ndcg,

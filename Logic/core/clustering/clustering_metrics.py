@@ -27,7 +27,10 @@ class ClusteringMetrics:
         float
             The average silhouette score, ranging from -1 to 1, where a higher value indicates better clustering.
         """
-        return silhouette_score(embeddings, cluster_labels)
+        max_length = max(len(embed) for embed in embeddings)
+        padded_embeddings = np.array([np.pad(embed, (0, max_length - len(embed)), 'constant') for embed in embeddings])
+        cluster_labels = np.array(cluster_labels)
+        return silhouette_score(padded_embeddings, cluster_labels)
 
     def purity_score(self, true_labels: List, cluster_labels: List) -> float:
         """
@@ -45,8 +48,11 @@ class ClusteringMetrics:
         float
             The purity score, ranging from 0 to 1, where a higher value indicates better clustering.
         """
-        matrix = confusion_matrix(true_labels, cluster_labels)
-        maxes = [max(matrix[:, i] for i in range(len(true_labels)))]
+        single_labels = [np.bincount(cluster_labels).argmax() for labels in true_labels]
+        if not single_labels:
+            return 0.0
+        matrix = confusion_matrix(single_labels, cluster_labels)
+        maxes = np.max(matrix, axis=0)
         return np.sum(maxes) / np.sum(matrix)
 
     def adjusted_rand_score(self, true_labels: List, cluster_labels: List) -> float:
@@ -65,4 +71,11 @@ class ClusteringMetrics:
         float
             The adjusted Rand index, ranging from -1 to 1, where a higher value indicates better clustering.
         """
-        return adjusted_rand_score(true_labels, cluster_labels)
+        unique_clusters = np.unique(cluster_labels)
+        cluster_true_labels = []
+        for cluster in unique_clusters:
+            true_labels_in_cluster = [true_labels[i] for i, label in enumerate(cluster_labels) if label == cluster]
+            cluster_true_labels.append(
+                max(set([str(label) for label in true_labels_in_cluster]), key=true_labels_in_cluster.count))
+
+        return adjusted_rand_score(true_labels, cluster_true_labels)

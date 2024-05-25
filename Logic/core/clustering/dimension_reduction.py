@@ -1,7 +1,7 @@
 from matplotlib import pyplot as plt
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
-from wandb.apis.importers import wandb
+import wandb
 
 
 class DimensionReduction:
@@ -67,6 +67,8 @@ class DimensionReduction:
         None
         """
         # Initialize wandb
+        wandb.login(key="63279235fbf3eb23c36ab8ad68bb00ffae0a06f9")
+
         run = wandb.init(project=project_name, name=run_name)
 
         # Perform t-SNE dimensionality reduction
@@ -120,6 +122,8 @@ class DimensionReduction:
         # TODO
 
         # Initialize wandb
+        wandb.login(key="63279235fbf3eb23c36ab8ad68bb00ffae0a06f9")
+
         run = wandb.init(project=project_name, name=run_name)
 
         # Log the plot to wandb
