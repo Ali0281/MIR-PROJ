@@ -89,3 +89,6 @@ class ReviewLoader:
             y_train = self.label_encoder.fit_transform(y_train)
             y_test = self.label_encoder.transform(y_test)
         return np.array(x_train), np.array(x_test), np.array(y_train), np.array(y_test)
+
+    def get_model(self):
+        return self.fasttext_model

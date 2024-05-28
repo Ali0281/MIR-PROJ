@@ -72,4 +72,11 @@ if __name__ == '__main__':
 
     svm = SVMClassifier()
     svm.fit(x_train, y_train)
+    svm.embedding = loader.get_model()
+
     print(svm.prediction_report(x_test, y_test))
+    print(svm.get_percent_of_positive_reviews(
+        ["happy happy good very chill and interesting", "excellent actors and staff and entertaining",
+         "very bad acting and horrible taste of art"]))
+    print(svm.get_percent_of_positive_reviews(
+        ["bro that movies didnt make any sense", "didnt like it i got bored", "i would recommend it"]))

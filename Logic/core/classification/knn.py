@@ -77,12 +77,20 @@ if __name__ == '__main__':
     loader = ReviewLoader()
     loader.load_data()
     loader.get_embeddings()
+
     x_train, x_test, y_train, y_test = loader.split_data()
 
     """label_enc = LabelEncoder()
     y = label_enc.fit_transform(y)
     y_test = label_enc.transform(y_test)"""
 
-    knn_classifier = KnnClassifier(n_neighbors=8)  # Initialize with desired k value
+    knn_classifier = KnnClassifier(n_neighbors=8)
+    knn_classifier.embedding = loader.get_model()
+
     knn_classifier.fit(x_train, y_train)
     print(knn_classifier.prediction_report(x_test, y_test))
+    print(knn_classifier.get_percent_of_positive_reviews(
+        ["happy happy good very chill and interesting", "excellent actors and staff and entertaining",
+         "very bad acting and horrible taste of art"]))
+    print(knn_classifier.get_percent_of_positive_reviews(
+        ["bro that movies didnt make any sense", "didnt like it i got bored", "i wouldn't recommend it"]))
