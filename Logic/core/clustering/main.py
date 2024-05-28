@@ -4,6 +4,7 @@ import fasttext
 import numpy as np
 import os
 
+from matplotlib import pyplot as plt
 from nltk import word_tokenize
 from nltk.corpus import stopwords
 from tqdm import tqdm
@@ -39,8 +40,8 @@ if __name__ == "__main__":
     ft_data_loader = FastTextDataLoader(path)
     X, y = ft_data_loader.create_train_data()
 
-    X = X[:2000]
-    y = y[:2000]
+    X = X[:4000]
+    y = y[:4000]
 
     embeddings = []
     for i in X:
@@ -54,12 +55,27 @@ if __name__ == "__main__":
     #     - Find the Singular Values and use the explained_variance_ratio_ attribute to determine the percentage of variance explained by each principal component.
     #     - Draw plots to visualize the results.
     DR = DimensionReduction()
+
     DR.wandb_plot_explained_variance_by_components(embeddings, "clusters", "variance by components")
+    # TODO : note : from plot : about 80 percent is preserved
+    n_components = 2
+    reduced, SV, EVR = DR.pca_reduce_dimension(embeddings, n_components)
+    """
+    
+    plt.figure(figsize=(10, 7))
+    plt.bar(range(1, n_components + 1), EVR, alpha=0.7, align='center')
+    plt.step(range(1, n_components + 1), np.cumsum(EVR), where='mid')
+    plt.ylabel('EVR')
+    plt.xlabel('p-components')
+    plt.show()
+    
+    ... 
+    """
 
     # TODO: Implement t-SNE (t-Distributed Stochastic Neighbor Embedding):
     #     - Create the convert_to_2d_tsne function, which takes a list of embedding vectors as input and reduces the dimensionality to two dimensions using the t-SNE method.
     #     - Use the output vectors from this step to draw the diagram.
-    DR.wandb_plot_2d_tsne(embeddings, "clusters", "tsne")
+    DR.wandb_plot_2d_tsne(reduced, "clusters", "tsne")
 
     # 2. Clustering
     ## K-Means Clustering
@@ -73,7 +89,7 @@ if __name__ == "__main__":
     # TODO: Draw the silhouette score graph for different values of k and perform silhouette analysis to choose the appropriate k.
     # TODO: Plot the purity value for k using the labeled data and report the purity value for the final k. (Use the provided functions in utilities)
 
-    reduced = DR.pca_reduce_dimension(embeddings, 6)
+    #reduced = DR.pca_reduce_dimension(embeddings, 4)
     CU = ClusteringUtils()
 
     all_k = list(range(2, 10))
@@ -82,6 +98,8 @@ if __name__ == "__main__":
 
     CU.plot_kmeans_cluster_scores(reduced, y, all_k, "clusters", "kmeans scores")
     CU.visualize_elbow_method_wcss(reduced, all_k, "clusters", "elbow")
+
+
 
     ## Hierarchical Clustering
     # TODO: Perform hierarchical clustering with all different linkage methods.
@@ -96,21 +114,18 @@ if __name__ == "__main__":
     CM = ClusteringMetrics()
 
     print("scores for kmeans:")
-    centers, labels = CU.cluster_kmeans(reduced, 6)
-    S, P, A = CM.silhouette_score(reduced, labels), CM.purity_score(y, labels), CM.adjusted_rand_score(y,
-                                                                                                             labels)
+    centers, labels = CU.cluster_kmeans(reduced, 4)
+    S, P, A = CM.silhouette_score(reduced, labels), CM.purity_score(y, labels), CM.adjusted_rand_score(y, labels)
     print(f'silhouette : {S} Purity : {P} Adjusted Rand : {A}')
 
     print("scores for H-ward:")
     labels = CU.cluster_hierarchical_ward(reduced)
-    S, P, A = CM.silhouette_score(reduced, labels), CM.purity_score(y, labels), CM.adjusted_rand_score(y,
-                                                                                                             labels)
+    S, P, A = CM.silhouette_score(reduced, labels), CM.purity_score(y, labels), CM.adjusted_rand_score(y, labels)
     print(f'silhouette : {S} Purity : {P} Adjusted Rand : {A}')
 
     print("scores for H-complete:")
     labels = CU.cluster_hierarchical_complete(reduced)
-    S, P, A = CM.silhouette_score(reduced, labels), CM.purity_score(y, labels), CM.adjusted_rand_score(y,
-                                                                                                             labels)
+    S, P, A = CM.silhouette_score(reduced, labels), CM.purity_score(y, labels), CM.adjusted_rand_score(y, labels)
     print(f'silhouette : {S} Purity : {P} Adjusted Rand : {A}')
 
     print("scores for H-average:")

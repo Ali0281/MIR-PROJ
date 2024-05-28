@@ -1,3 +1,4 @@
+import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
@@ -24,7 +25,10 @@ class DimensionReduction:
             list: A list of reduced embeddings.
         """
         if n_components is not None: self.pca = PCA(n_components=n_components)
-        return self.pca.fit_transform(embeddings)
+        reduced = self.pca.fit_transform(embeddings)
+        SV = self.pca.singular_values_
+        EVR = self.pca.explained_variance_ratio_
+        return reduced, SV, EVR
 
     def convert_to_2d_tsne(self, emb_vecs):
         """
@@ -67,9 +71,8 @@ class DimensionReduction:
         None
         """
         # Initialize wandb
-        wandb.login(key="63279235fbf3eb23c36ab8ad68bb00ffae0a06f9")
-
-        run = wandb.init(project=project_name, name=run_name)
+        # wandb.login(key="63279235fbf3eb23c36ab8ad68bb00ffae0a06f9")
+        # run = wandb.init(project=project_name, name=run_name)
 
         # Perform t-SNE dimensionality reduction
         # TODO
@@ -77,16 +80,17 @@ class DimensionReduction:
 
         # Plot the t-SNE embeddings
         # TODO
-        plt.scatter(tsne[:, 0], tsne[:, 1], c='black')
+        plt.figure(figsize=(8, 6))
+        plt.scatter(tsne[:, 0], tsne[:, 1])
+        plt.title('2d_tsne_embeddings')
 
         # Log the plot to wandb
-        wandb.log({"t-SNE 2D Embeddings": wandb.Image(plt)})
+        # wandb.log({"t-SNE 2D Embeddings": wandb.Image(plt)})
 
         # Close the plot display window if needed (optional)
         # TODO
-        plt.close()
-
-    import matplotlib.pyplot as plt
+        # plt.close()
+        plt.show()
 
     def wandb_plot_explained_variance_by_components(self, data, project_name, run_name):
         """
@@ -117,17 +121,25 @@ class DimensionReduction:
 
         # Fit PCA and compute cumulative explained variance ratio
         # TODO
+        pca = PCA().fit(data)
+        CEV = np.cumsum(pca.explained_variance_ratio_)
 
         # Create the plot
         # TODO
+        plt.figure(figsize=(8, 6))
+        plt.plot(CEV)
+        plt.title('cumulative explained variance ratio')
+        plt.xlabel('n-components')
+        plt.ylabel('CEVR')
 
         # Initialize wandb
-        wandb.login(key="63279235fbf3eb23c36ab8ad68bb00ffae0a06f9")
+        # wandb.login(key="63279235fbf3eb23c36ab8ad68bb00ffae0a06f9")
 
-        run = wandb.init(project=project_name, name=run_name)
+        # run = wandb.init(project=project_name, name=run_name)
 
         # Log the plot to wandb
-        wandb.log({"Explained Variance": wandb.Image(plt)})
+        # wandb.log({"Explained Variance": wandb.Image(plt)})
 
         # Close the plot display window if needed (optional)
-        plt.close()
+        # plt.close()
+        plt.show()
