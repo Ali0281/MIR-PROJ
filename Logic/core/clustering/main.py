@@ -31,6 +31,8 @@ def preprocess_text(text, minimum_length=1, stopword_removal=True, stopwords_dom
 
 
 if __name__ == "__main__":
+    # TODO ::::::: note : couldn't connect myself to wandb site for debugging and seeing the plots so i just used plot show!
+
     # 0. Embedding Extraction
     # TODO: Using the previous preprocessor and fasttext model, collect all the embeddings of our data and store them.
 
