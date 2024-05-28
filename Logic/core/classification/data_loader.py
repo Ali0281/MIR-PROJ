@@ -6,7 +6,7 @@ import tqdm
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 
-from ..word_embedding.fasttext_model import FastText, preprocess_text
+from Logic.core.word_embedding.fasttext_model import FastText, preprocess_text
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 

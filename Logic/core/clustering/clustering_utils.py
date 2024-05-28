@@ -35,9 +35,9 @@ class ClusteringUtils:
             2. A list containing the cluster index for each input vector.
         """
 
-        KM = KMeans(n_clusters=n_clusters, random_state=0, max_iter=max_iter)
+        """KM = KMeans(n_clusters=n_clusters, random_state=0, max_iter=max_iter)
         KM.fit(emb_vecs)
-        return (KM.cluster_centers_, KM.labels_)
+        return (KM.cluster_centers_, KM.labels_)"""
 
         centers = [emb_vecs[i] for i in np.random.choice(len(emb_vecs), size=n_clusters, replace=False)]
         #total_distance = float('inf')
@@ -97,9 +97,10 @@ class ClusteringUtils:
             2) A list containing the cluster index for each input vector.
             3) The Within-Cluster Sum of Squares (WCSS) value for the clustering.
         """
-        KM = KMeans(n_clusters=n_clusters, random_state=0)
+
+        """KM = KMeans(n_clusters=n_clusters, random_state=0)
         KM.fit(emb_vecs)
-        return (KM.cluster_centers_, KM.labels_, KM.inertia_)
+        return (KM.cluster_centers_, KM.labels_, KM.inertia_)"""
 
 
         centers = [emb_vecs[i] for i in np.random.choice(len(emb_vecs), size=n_clusters, replace=False)]
