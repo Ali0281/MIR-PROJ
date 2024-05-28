@@ -41,13 +41,17 @@ def correct_text(text: str, all_documents: List[str]) -> str:
     spell_correction_obj = SpellCorrection(data)
     return spell_correction_obj.spell_check(text)
 
+
 def search(
-    query: str,
-    max_result_count: int,
-    method: str = "ltn-lnn",
-    weights: list = [0.3, 0.3, 0.4],
-    should_print=False,
-    preferred_genre: str = None,
+        query: str,
+        max_result_count: int,
+        method: str = "ltn-lnn",
+        weights: list = [0.3, 0.3, 0.4],
+        should_print=False,
+        preferred_genre: str = None,
+        unigram_smoothing=None,
+        alpha=0.5,
+        lamda=0.5,
 ):
     """
     Finds relevant documents to query
@@ -84,7 +88,8 @@ def search(
     }"""
 
     return search_engine.search(
-        query, method, weights, max_results=max_result_count, safe_ranking=True
+        query, method, weights, max_results=max_result_count, safe_ranking=True, smoothing_method=unigram_smoothing,
+        alpha=alpha, lamda=lamda
     )
 
 
@@ -122,7 +127,7 @@ def get_movie_by_id(id: str, movies_dataset: List[Dict[str, str]]) -> Dict[str, 
         if document["id"] == id:
             result = document
             break
-    if result is None :
+    if result is None:
         result = movies_dataset[0]
 
     result["Image_URL"] = (

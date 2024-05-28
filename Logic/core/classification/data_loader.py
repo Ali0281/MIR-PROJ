@@ -30,8 +30,14 @@ class ReviewLoader:
         """
         self.fasttext_model = FastText()
         self.label_encoder = LabelEncoder()
-        self.DF = pd.read_csv(self.file_path)
+        self.DF = pd.read_csv(self.file_path)[:5000]
+
+        # self.DF["review"] = self.DF["review"].apply(lambda x: preprocess_text(x)).tolist()
+        # self.DF.to_csv("C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/classification/labeled-comments-preprocessed.csv")
+
         self.review_tokens = self.DF["review"].apply(lambda x: preprocess_text(x)).tolist()
+
+        self.review_tokens = self.DF["review"].tolist()
         self.sentiments = self.DF["sentiment"].tolist()
 
         # TODO : note : it gets bugged and all when we do it for naive so it will be implemented else where
@@ -46,10 +52,14 @@ class ReviewLoader:
         """
         Get the embeddings for the reviews using the fasttext model.
         """
-        self.fasttext_model.train(self.review_tokens)
+        self.fasttext_model.prepare(None, mode="load")
+        # model = self.fasttext_model.train(self.review_tokens, E="training-clustering.txt")
+        # self.fasttext_model.prepare(model, mode="save", path="classification")
+
         # with open('embeddings.json', "r") as f:
         #    self.embeddings = np.array( float(i) for i in  json.load(f)["embeddings"] )
         # return
+
         self.embeddings = []
         for tokens in tqdm.tqdm(self.review_tokens, desc="embeddings ..."):
             self.embeddings.append(self.fasttext_model.get_query_embedding(tokens))
@@ -73,7 +83,6 @@ class ReviewLoader:
             Return the training and testing data for the embeddings and the sentiments.
             in the order of x_train, x_test, y_train, y_test
         """
-
         x_train, x_test, y_train, y_test = train_test_split(self.embeddings, self.sentiments, test_size=test_data_ratio,
                                                             random_state=42)
         if enc:

@@ -43,7 +43,6 @@ class FastTextDataLoader:
         """
         movies_dataset = None
         # TODO : note : imported pre processed data so i have lower over head | could have used path too
-
         with open("C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/preprocess.json", "r") as f:
             movies_dataset = json.load(f)
 
@@ -100,11 +99,15 @@ class FastTextDataLoader:
         # self.DF["genres"][:] = self.DF["genres"].factorize()[0]
         # self.DF["genres"] = self.DF["genres"].groupby(level=0).agg(list)
 
+        # enc.fit(all_genres)
+        # self.DF['genres'] = self.DF['genres'].apply(enc.transform)
+
+        # TODO : note : i just used the first genre.
+        self.DF["genres"] = self.DF["genres"].fillna('').apply(lambda x: x[0] if isinstance(x, list) and len(x) > 0 else None)
         all_genres = self.DF["genres"].apply(pd.Series).stack().values
         enc = LabelEncoder()
-        enc.fit(all_genres)
+        self.DF['genres'] = enc.fit_transform(self.DF['genres'])
 
-        self.DF['genres'] = self.DF['genres'].apply(enc.transform)
 
         # X = self.DF[["synposis", "summaries", "reviews", "titles"]]
         X = self.DF["text"]

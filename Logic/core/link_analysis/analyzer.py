@@ -140,12 +140,12 @@ class LinkAnalyzer:
             h_s = list(sorted_hubs.keys())[:h_max]
 
         # TODO : note: need to convert the id to name
-        documents_index = Index_reader("", index_name=Indexes.DOCUMENTS).index
+        #documents_index = Index_reader("", index_name=Indexes.DOCUMENTS).index
 
-        for i in a_s_:
-            a_s.append(documents_index[i]["title"])
+        #for i in a_s_:
+            #a_s.append(documents_index[i]["title"])
 
-        return h_s, a_s
+        return h_s, a_s_
 
 
 if __name__ == "__main__":
@@ -153,17 +153,17 @@ if __name__ == "__main__":
     with open("../preprocess.json", "r") as f:
         data = json.load(f)
 
-    corpus = []  # TODO: it shoud be your crawled data
+    corpus = []
     for document in data:
         corpus.append({"id": document["id"], "title": document["title"], "stars": document["stars"]})
 
     corpus = corpus
     # root_set = []  # TODO: it shoud be a subset of your corpus
-    root_set = list(filter(lambda x: random.randrange(10), corpus))
+    root_set = list(filter(lambda x: random.randrange(20), corpus))
 
     analyzer = LinkAnalyzer(root_set=root_set)
     analyzer.expand_graph(corpus=corpus)
-    actors, movies = analyzer.hits(max_result=5, num_iteration=40)
+    actors, movies = analyzer.hits(max_result=5, num_iteration=500)
     print("Top Actors:")
     print(*actors, sep=' - ')
     print("Top Movies:")

@@ -4,6 +4,7 @@ from typing import List
 from sklearn.metrics import silhouette_score
 from sklearn.metrics import adjusted_rand_score
 from sklearn.metrics import confusion_matrix
+from sklearn.preprocessing import LabelEncoder
 
 
 class ClusteringMetrics:
@@ -48,10 +49,12 @@ class ClusteringMetrics:
         float
             The purity score, ranging from 0 to 1, where a higher value indicates better clustering.
         """
-        single_labels = [np.bincount(cluster_labels).argmax() for labels in true_labels]
-        if not single_labels:
-            return 0.0
-        matrix = confusion_matrix(single_labels, cluster_labels)
+        # single_labels = [np.bincount(cluster_labels).argmax() for labels in true_labels]
+        # if not single_labels:
+        #    return 0.0
+        # matrix = confusion_matrix(single_labels, cluster_labels)
+
+        matrix = confusion_matrix(true_labels, cluster_labels)
         maxes = np.max(matrix, axis=0)
         return np.sum(maxes) / np.sum(matrix)
 
@@ -71,11 +74,14 @@ class ClusteringMetrics:
         float
             The adjusted Rand index, ranging from -1 to 1, where a higher value indicates better clustering.
         """
-        unique_clusters = np.unique(cluster_labels)
-        cluster_true_labels = []
-        for cluster in unique_clusters:
-            true_labels_in_cluster = [true_labels[i] for i, label in enumerate(cluster_labels) if label == cluster]
-            cluster_true_labels.append(
-                max(set([str(label) for label in true_labels_in_cluster]), key=true_labels_in_cluster.count))
+        #unique_clusters = np.unique(cluster_labels)
+        #cluster_true_labels = []
+        #for cluster in unique_clusters:
+        #    true_labels_in_cluster = [true_labels[i] for i, label in enumerate(cluster_labels) if label == cluster]
+        #    cluster_true_labels.append(
+        #        max(set([tuple(label) for label in true_labels_in_cluster]), key=true_labels_in_cluster.count))
 
-        return adjusted_rand_score(true_labels, cluster_true_labels)
+        #return adjusted_rand_score(true_labels, cluster_true_labels)
+
+        return adjusted_rand_score(true_labels, cluster_labels)
+

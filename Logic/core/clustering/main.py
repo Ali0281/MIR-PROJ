@@ -28,6 +28,7 @@ def preprocess_text(text, minimum_length=1, stopword_removal=True, stopwords_dom
     text = " ".join(tokenized)
     return text
 
+
 if __name__ == "__main__":
     # 0. Embedding Extraction
     # TODO: Using the previous preprocessor and fasttext model, collect all the embeddings of our data and store them.
@@ -38,8 +39,8 @@ if __name__ == "__main__":
     ft_data_loader = FastTextDataLoader(path)
     X, y = ft_data_loader.create_train_data()
 
-    X = X[:100]
-    y = y[:100]
+    X = X[:2000]
+    y = y[:2000]
 
     embeddings = []
     for i in X:
@@ -72,11 +73,10 @@ if __name__ == "__main__":
     # TODO: Draw the silhouette score graph for different values of k and perform silhouette analysis to choose the appropriate k.
     # TODO: Plot the purity value for k using the labeled data and report the purity value for the final k. (Use the provided functions in utilities)
 
-
-    reduced = DR.pca_reduce_dimension(embeddings, 2)
+    reduced = DR.pca_reduce_dimension(embeddings, 6)
     CU = ClusteringUtils()
 
-    all_k = list(range(2, 14, 2))
+    all_k = list(range(2, 10))
     for i in all_k:
         CU.visualize_kmeans_clustering_wandb(reduced, i, "clusters", "kmeans")
 
@@ -97,30 +97,28 @@ if __name__ == "__main__":
 
     print("scores for kmeans:")
     centers, labels = CU.cluster_kmeans(reduced, 6)
-    S, P, A = CM.silhouette_score(reduced, labels), CM.purity_score(reduced, labels), CM.adjusted_rand_score(reduced,
+    S, P, A = CM.silhouette_score(reduced, labels), CM.purity_score(y, labels), CM.adjusted_rand_score(y,
                                                                                                              labels)
     print(f'silhouette : {S} Purity : {P} Adjusted Rand : {A}')
 
     print("scores for H-ward:")
     labels = CU.cluster_hierarchical_ward(reduced)
-    S, P, A = CM.silhouette_score(reduced, labels), CM.purity_score(reduced, labels), CM.adjusted_rand_score(reduced,
+    S, P, A = CM.silhouette_score(reduced, labels), CM.purity_score(y, labels), CM.adjusted_rand_score(y,
                                                                                                              labels)
     print(f'silhouette : {S} Purity : {P} Adjusted Rand : {A}')
 
     print("scores for H-complete:")
     labels = CU.cluster_hierarchical_complete(reduced)
-    S, P, A = CM.silhouette_score(reduced, labels), CM.purity_score(reduced, labels), CM.adjusted_rand_score(reduced,
+    S, P, A = CM.silhouette_score(reduced, labels), CM.purity_score(y, labels), CM.adjusted_rand_score(y,
                                                                                                              labels)
     print(f'silhouette : {S} Purity : {P} Adjusted Rand : {A}')
 
     print("scores for H-average:")
     labels = CU.cluster_hierarchical_average(reduced)
-    S, P, A = CM.silhouette_score(reduced, labels), CM.purity_score(reduced, labels), CM.adjusted_rand_score(reduced,
-                                                                                                             labels)
+    S, P, A = CM.silhouette_score(reduced, labels), CM.purity_score(y, labels), CM.adjusted_rand_score(y, labels)
     print(f'silhouette : {S} Purity : {P} Adjusted Rand : {A}')
 
     print("scores for H-single:")
     labels = CU.cluster_hierarchical_average(reduced)
-    S, P, A = CM.silhouette_score(reduced, labels), CM.purity_score(reduced, labels), CM.adjusted_rand_score(reduced,
-                                                                                                             labels)
+    S, P, A = CM.silhouette_score(reduced, labels), CM.purity_score(y, labels), CM.adjusted_rand_score(y, labels)
     print(f'silhouette : {S} Purity : {P} Adjusted Rand : {A}')

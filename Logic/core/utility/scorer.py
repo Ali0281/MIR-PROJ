@@ -322,7 +322,7 @@ class Scorer:
 
         score = 1
         word_count = document_lengths.get(document_id, 0)
-        if word_count == 0 or corpus_count == 0: raise Exception("zero value for doc length for unigram model")
+        if word_count == 0 or corpus_count == 0: return 0
 
         for term in query:
             dtf = self.index.get(term, {}).get(document_id, 0)

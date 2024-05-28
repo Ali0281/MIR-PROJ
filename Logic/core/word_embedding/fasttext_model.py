@@ -38,7 +38,8 @@ def preprocess_text(text, minimum_length=1, stopword_removal=True, stopwords_dom
     if lower_case: text = text.lower()
     tokenized = [i for i in word_tokenize(text) if len(i) >= minimum_length]
     if punctuation_removal: tokenized = [i for i in tokenized if i not in string.punctuation]
-    if stopword_removal: tokenized = [i for i in tokenized if i not in set(stopwords.words('english')).union(set(stopwords_domain))]
+    if stopword_removal: tokenized = [i for i in tokenized if
+                                      i not in set(stopwords.words('english')).union(set(stopwords_domain))]
     text = " ".join(tokenized)
     return text
 
@@ -68,7 +69,7 @@ class FastText:
         self.model = None
         self.preprocessor = preprocessor
 
-    def train(self, texts):
+    def train(self, texts, E=None):
         """
         Trains the FastText model with the given texts.
 
@@ -77,17 +78,23 @@ class FastText:
         texts : list of str
             The texts to train the FastText model.
         """
-        path = 'training.txt'
+
         # TODO : note : may need to change
-        self.load_model()
-        return
+        # self.load_model()
+        # return
 
-        with open(path, mode='w', encoding="utf-8") as f:
-            for i in texts: f.write(i + os.linesep)
+        if E is None:
+            with open(path, mode='w', encoding="utf-8") as f:
+                for i in texts: f.write(i + os.linesep)
+            self.model = fasttext.train_unsupervised(path, self.method)
+        else:
+            with open(E, mode='w', encoding="utf-8") as f:
+                for i in texts: f.write(i + os.linesep)
+            self.model = fasttext.train_unsupervised(E, self.method)
 
-        self.model = fasttext.train_unsupervised(path, self.method)
-        self.save_model()
+        # self.save_model()
 
+        return self.model
 
     def get_query_embedding(self, query):
         """
@@ -123,20 +130,17 @@ class FastText:
         Returns:
             str: The word that completes the analogy.
         """
+        # TODO: note : ready type
+        # return self.model.get_analogies(word1, word2, word3)[0][1]
+
         # Obtain word embeddings for the words in the analogy
         # TODO
-
-        # TODO: note : use not ready type
-        analogy_result = self.model.get_analogies(word1, word2, word3)
-        return analogy_result
-
-        vectors = []
-        for i in [word1, word2, word3]:
-            vectors.append(self.model.get_word_vector(i))
+        vectors = {word: self.model.get_word_vector(word) for word in [word1, word2, word3]}
 
         # Perform vector arithmetic
         # TODO
-        result = vectors[2] + vectors[1] - vectors[0]
+        result1 = vectors[word3] + vectors[word2] - vectors[word1]
+        result2 = vectors[word3] - vectors[word2] + vectors[word1]
 
         # Create a dictionary mapping each word in the vocabulary to its corresponding vector
         # TODO
@@ -146,19 +150,18 @@ class FastText:
 
         # Exclude the input words from the possible results
         # TODO
-        for i in vectors:
+        for i in [word1, word2, word3]:
             if i in word_to_vec: del word_to_vec[i]
 
         # Find the word whose vector is closest to the result vector
         # TODO
-        candidate, distance = None, None
+        candidate, min_distance = None, None
         for k, v in word_to_vec.items():
+            new_distance = min(np.linalg.norm(result1 - v), np.linalg.norm(result2 - v))
             if candidate is None:
-                candidate, distance = v, np.linalg.norm(result - v)
-            else:
-                new_distance = np.linalg.norm(result - v)
-                if new_distance < distance:
-                    candidate, distance = v, new_distance
+                candidate, min_distance = v, new_distance
+            if new_distance < min_distance:
+                candidate, min_distance = k, new_distance
 
         return candidate
 
@@ -206,13 +209,14 @@ class FastText:
 if __name__ == "__main__":
     ft_model = FastText(preprocessor=preprocess_text, method='skipgram')
 
-    path = './Phase_1/index/'
+    path = 'training.txt'
     ft_data_loader = FastTextDataLoader(path)
 
     X, y = ft_data_loader.create_train_data()
 
-    ft_model.train(X)
-    ft_model.prepare(None, mode="save")
+    ft_model.prepare(None, mode="load")
+    # model = ft_model.train(X)
+    # ft_model.prepare(model, mode="save")
 
     print(10 * "*" + "Similarity" + 10 * "*")
     word = 'queen'

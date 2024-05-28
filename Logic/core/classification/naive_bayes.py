@@ -127,6 +127,6 @@ if __name__ == '__main__':
 
     print(nb_classifier.prediction_report(x_test_vec.toarray(), y_test))
     print(nb_classifier.get_percent_of_positive_reviews(
-        ["happy happy good very chill and intersting", "excellent actors and staff and entertaining", "very bad acting and horrible taste of art"]))
+        ["happy happy good very chill and interesting", "excellent actors and staff and entertaining", "very bad acting and horrible taste of art"]))
     print(nb_classifier.get_percent_of_positive_reviews(
-        ["bro that movies didnt make any sence", "didnt like it i got bored", "i would recommend it"]))
+        ["bro that movies didnt make any sense", "didnt like it i got bored", "i would recommend it"]))

@@ -34,9 +34,23 @@ class ClusteringUtils:
             1. A list containing the cluster centers.
             2. A list containing the cluster index for each input vector.
         """
+
         KM = KMeans(n_clusters=n_clusters, random_state=0, max_iter=max_iter)
         KM.fit(emb_vecs)
         return (KM.cluster_centers_, KM.labels_)
+
+        centers = [emb_vecs[i] for i in np.random.choice(len(emb_vecs), size=n_clusters, replace=False)]
+        #total_distance = float('inf')
+        for _ in range(max_iter):
+            cluster_indices = [np.argmin([np.linalg.norm(vec - center) for center in centers]) for vec in emb_vecs]
+            new_centers = [np.mean([emb_vecs[j] for j in range(len(emb_vecs)) if cluster_indices[j] == i], axis=0) if any(cluster_indices[j] == i for j in range(len(emb_vecs))) else centers[i] for i in range(n_clusters)]
+            #new_total_distance = sum(np.linalg.norm(emb_vecs[i] - new_centers[cluster_indices[i]]) ** 2 for i in range(len(emb_vecs)))
+            #if np.isclose(total_distance, new_total_distance): break
+            #total_distance = new_total_distance
+            centers = new_centers
+        return centers, cluster_indices
+
+
 
     def get_most_frequent_words(self, documents: List[str], top_n: int = 10) -> List[Tuple[str, int]]:
         """
@@ -87,6 +101,19 @@ class ClusteringUtils:
         KM.fit(emb_vecs)
         return (KM.cluster_centers_, KM.labels_, KM.inertia_)
 
+
+        centers = [emb_vecs[i] for i in np.random.choice(len(emb_vecs), size=n_clusters, replace=False)]
+        total_distance, max_iter = float('inf'), 100
+        for _ in range(max_iter):
+            cluster_indices = [np.argmin([np.linalg.norm(vec - center) for center in centers]) for vec in emb_vecs]
+            new_centers = [np.mean([emb_vecs[j] for j in range(len(emb_vecs)) if cluster_indices[j] == i], axis=0) if any(cluster_indices[j] == i for j in range(len(emb_vecs))) else centers[i] for i in range(n_clusters)]
+            new_total_distance = sum(np.linalg.norm(emb_vecs[i] - new_centers[cluster_indices[i]]) ** 2 for i in range(len(emb_vecs)))
+            if np.isclose(total_distance, new_total_distance): break
+            total_distance = new_total_distance
+            centers = new_centers
+        return centers, cluster_indices, total_distance
+
+
     def cluster_hierarchical_single(self, emb_vecs: List) -> List:
         """
         Clusters input vectors using the hierarchical clustering method with single linkage.
@@ -102,7 +129,7 @@ class ClusteringUtils:
             A list containing the cluster index for each input vector.
         """
         KM = AgglomerativeClustering(linkage='single')
-        KM.fit(emb_vecs)
+        KM.fit_predict(emb_vecs)
         return KM.labels_
 
     def cluster_hierarchical_complete(self, emb_vecs: List) -> List:
