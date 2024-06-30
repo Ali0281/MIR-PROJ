@@ -12,6 +12,18 @@ from Logic.core.indexer.index_reader import Index_reader, Indexes
 
 snippet_obj = Snippet()
 
+################################################################
+
+st.set_page_config(
+    page_title="Movie Master",
+    page_icon="🎬",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
+
+################################################################
+
 
 class color(Enum):
     RED = "#FF0000"
@@ -66,67 +78,69 @@ def search_time(start, end):
 
 
 def search_handling(
-    search_button,
-    search_term,
-    search_max_num,
-    search_weights,
-    search_method,
-    unigram_smoothing,
-    alpha,
-    lamda,
-    filter_button,
-    num_filter_results,
+        search_button,
+        search_term,
+        search_max_num,
+        search_weights,
+        search_method,
+        unigram_smoothing,
+        alpha,
+        lamda,
+        filter_button,
+        num_filter_results,
 ):
+    colors = ["#FF5733", "#1F618D", "#58D68D", "#F4D03F", "#A569BD", "#EC7063", "#5DADE2", "#52BE80", "#F39C12"]
+
     if filter_button:
         if "search_results" in st.session_state:
             top_actors, top_movies = get_top_x_movies_by_rank(
                 num_filter_results, st.session_state["search_results"]
             )
-            st.markdown(f"**Top {num_filter_results} Actors:**")
-            actors_ = ", ".join(top_actors)
-            st.markdown(
-                f"<span style='color:{random.choice(list(color)).value}'>{actors_}</span>",
-                unsafe_allow_html=True,
-            )
+            top_actors_str =", ".join(top_actors)
+            color = colors[3]
+            st.markdown(f"<span style='color:{color}'><b>**Top {num_filter_results} Actors:** : </b></span> {top_actors_str}",
+                        unsafe_allow_html=True)
+
             st.divider()
 
         st.markdown(f"**Top {num_filter_results} Movies:**")
+        print(top_movies)
         for i in range(len(top_movies)):
-            card = st.columns([3, 1])
             info = utils.get_movie_by_id(top_movies[i], utils.movies_dataset)
+
+            st.title(info["title"])
+            card = st.columns(2)
             with card[0].container():
-                st.title(info["title"])
                 st.markdown(f"[Link to movie]({info['URL']})")
+                color = colors[4]
                 st.markdown(
-                    f"<b><font size = '4'>Summary:</font></b> {get_summary_with_snippet(info, search_term)}",
+                    f"<span style='color:{color}'><b>**Summary**:</b></span> {get_summary_with_snippet(info, search_term)}",
                     unsafe_allow_html=True,
                 )
 
-            with st.container():
-                st.markdown("**Directors:**")
-                num_authors = len(info["directors"])
-                for j in range(num_authors):
-                    st.text(info["directors"][j])
+                random.shuffle(colors)
 
-            with st.container():
-                st.markdown("**Stars:**")
-                num_authors = len(info["stars"])
-                stars = "".join(star + ", " for star in info["stars"])
-                st.text(stars[:-2])
+                stars_str = ", ".join(info["stars"])
+                color = colors[0]
+                st.markdown(f"<span style='color:{color}'><b>**Stars**:</b></span> {stars_str}",
+                            unsafe_allow_html=True)
 
-                topic_card = st.columns(1)
-                with topic_card[0].container():
-                    st.write("Genres:")
-                    num_topics = len(info["genres"])
-                    for j in range(num_topics):
-                        st.markdown(
-                            f"<span style='color:{random.choice(list(color)).value}'>{info['genres'][j]}</span>",
-                            unsafe_allow_html=True,
-                        )
+                directors_str = ", ".join(info["directors"])
+                color = colors[1]
+                st.markdown(f"<span style='color:{color}'><b>**Directors**:</b></span> {directors_str}",
+                            unsafe_allow_html=True)
+
+                genres_str = ", ".join(info["genres"])
+                color = colors[2]
+                st.markdown(f"<span style='color:{color}'><b>**Genres**:</b></span> {genres_str}",
+                            unsafe_allow_html=True)
+                st.video(info["Video_URL"])
+
             with card[1].container():
                 st.image(info["Image_URL"], use_column_width=True)
 
             st.divider()
+
         return
 
     if search_button:
@@ -158,49 +172,51 @@ def search_handling(
 
             search_time(start_time, end_time)
 
+
         for i in range(len(result)):
-            card = st.columns([3, 1])
             info = utils.get_movie_by_id(result[i][0], utils.movies_dataset)
+
+            st.title(info["title"])
+            card = st.columns(2)
             with card[0].container():
-                st.title(info["title"])
                 st.markdown(f"[Link to movie]({info['URL']})")
-                st.write(f"Relevance Score: {result[i][1]}")
+                color = colors[5]
                 st.markdown(
-                    f"<b><font size = '4'>Summary:</font></b> {get_summary_with_snippet(info, search_term)}",
+                    f"<span style='color:{color}'><b>**Relevance Score**:</b></span> {result[i][1]}", unsafe_allow_html=True)
+                color = colors[4]
+                st.markdown(
+                    f"<span style='color:{color}'><b>**Summary**:</b></span> {get_summary_with_snippet(info, search_term)}",
                     unsafe_allow_html=True,
                 )
 
-            with st.container():
-                st.markdown("**Directors:**")
-                num_authors = len(info["directors"])
-                for j in range(num_authors):
-                    st.text(info["directors"][j])
+                random.shuffle(colors)
 
-            with st.container():
-                st.markdown("**Stars:**")
-                num_authors = len(info["stars"])
-                stars = "".join(star + ", " for star in info["stars"])
-                st.text(stars[:-2])
+                stars_str = ", ".join(info["stars"])
+                color = colors[0]
+                st.markdown(f"<span style='color:{color}'><b>**Stars**:</b></span> {stars_str}",
+                            unsafe_allow_html=True)
 
-                topic_card = st.columns(1)
-                with topic_card[0].container():
-                    st.write("Genres:")
-                    num_topics = len(info["genres"])
-                    for j in range(num_topics):
-                        st.markdown(
-                            f"<span style='color:{random.choice(list(color)).value}'>{info['genres'][j]}</span>",
-                            unsafe_allow_html=True,
-                        )
+                directors_str = ", ".join(info["directors"])
+                color = colors[1]
+                st.markdown(f"<span style='color:{color}'><b>**Directors**:</b></span> {directors_str}",
+                            unsafe_allow_html=True)
+
+                genres_str = ", ".join(info["genres"])
+                color = colors[2]
+                st.markdown(f"<span style='color:{color}'><b>**Genres**:</b></span> {genres_str}", unsafe_allow_html=True)
+                st.video(info["Video_URL"])
+
             with card[1].container():
                 st.image(info["Image_URL"], use_column_width=True)
+
 
             st.divider()
 
         st.session_state["search_results"] = result
         if "filter_state" in st.session_state:
             st.session_state["filter_state"] = (
-                "search_results" in st.session_state
-                and len(st.session_state["search_results"]) > 0
+                    "search_results" in st.session_state
+                    and len(st.session_state["search_results"]) > 0
             )
 
 

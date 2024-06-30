@@ -1,5 +1,10 @@
 import json
 from typing import Dict, List
+
+from bs4 import BeautifulSoup
+import requests
+
+from Logic.core.utility import IMDbCrawler
 from .core.search import SearchEngine
 from .core.utility.spell_correction import SpellCorrection
 from .core.utility.snippet import Snippet
@@ -12,7 +17,9 @@ from Logic.core.utility.spell_correction import (SpellCorrection)
 from Logic.core.search import SearchEngine
 
 movies_dataset = None  # TODO
-with open("C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/preprocess.json", "r") as f:
+# with open("C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/preprocess.json", "r") as f:
+#    movies_dataset = json.load(f)
+with open("C:/Users/Ali/PycharmProjects/MIR-PROJ/Logic/core/IMDB_movies.json", "r") as f:
     movies_dataset = json.load(f)
 
 search_engine = SearchEngine()
@@ -129,11 +136,103 @@ def get_movie_by_id(id: str, movies_dataset: List[Dict[str, str]]) -> Dict[str, 
             break
     if result is None:
         result = movies_dataset[0]
+    ##########################################################################################
+    crawler = IMDbCrawler()
+    respond = crawler.crawl("https://www.imdb.com/title/" + result["id"])
+    soup = BeautifulSoup(respond.content, 'html.parser')
+    img_url = ""
+    try:
+        img_ = soup.find("img", {"class": "ipc-image"})
+        if img_ is None: raise Exception("unknown image field")
+        img_url = img_.get("src")
+    except Exception as e:
+        print(f"failed to get img_url, exception : {e}")
+    finally:
+        img_url = img_url if img_url is not None else ""
 
-    result["Image_URL"] = (
-        "https://m.media-amazon.com/images/M/MV5BNDE3ODcxYzMtY2YzZC00NmNlLWJiNDMtZDViZWM2MzIxZDYwXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_.jpg"
-        # a default picture for selected movies
-    )
+    '''
+    video_url = ""
+    try:
+        video_ = soup.find("div", {"class": "jw-wrapper jw-reset"})
+        print(video_)
+        video_ = video_.find("video")
+        print(video_)
+        if video_ is None: raise Exception("unknown video field")
+        video_url = video_.get("src")
+        print(video_, end="\n\n\n\n")
+        """
+        scripts = soup.find_all('script', type='application/json')
+        for script in scripts:
+            try:
+                json_data = json.loads(script.string)
+                if 'video' in json_data:
+                    video_url = json_data['video']['playbackUrls'][0]
+                    break
+            except (json.JSONDecodeError, KeyError):
+                continue"""
+
+        if not video_url:
+            raise Exception("unknown video field")
+
+        print("Video URL:", video_url)
+    except Exception as e:
+        print(f"failed to get video_url, exception : {e}")
+    finally:
+        video_url = video_url if video_url is not None else ""
+        
+    '''
+
+    url = f"https://api.themoviedb.org/3/movie/{result["id"]}/videos?language=en-US"
+    headers = {
+        "accept": "application/json",
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIzNThmZDhmNjE0YWFmNmIyNzJiZmVhY2Q5MDE1NGU3OSIsIm5iZiI6MTcxOTc1NTM0Mi42OTExNiwic3ViIjoiNjY4MTVmOWVmMjkwZmZkYzIwMTYzOTFiIiwic2NvcGVzIjpbImFwaV9yZWFkIl0sInZlcnNpb24iOjF9._xpi4fvuzHK6vc_sm1nIiNLkF4kzLNIqsSfzpo9dyCU"
+    }
+    videos = []
+    names = []
+    video_url = ""
+    name_vid = ""
+    response = requests.get(url, headers=headers)
+    flag = True
+    if response.status_code == 200:
+        data = response.json()
+        results = data.get('results', [])
+
+        for video in results:
+            name = video.get('name')
+            key = video.get('key')
+            if name and key:
+                youtube_url = f"https://www.youtube.com/watch?v={key}"
+                if flag:
+                    video_url = youtube_url
+                    name_vid = name
+                    flag = False
+                videos.append(youtube_url)
+                names.append(name)
+    else:
+        print(f"Failed to fetch data: {response.status_code} - {response.text}")
+    #############################################################################################
+    if img_url == "":
+        result["Image_URL"] = (
+            "https://m.media-amazon.com/images/M/MV5BNDE3ODcxYzMtY2YzZC00NmNlLWJiNDMtZDViZWM2MzIxZDYwXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_.jpg"
+        )
+    else:
+        result["Image_URL"] = (
+            img_url
+        )
+
+    if video_url == "":
+        result["Video_URL"] = (
+            "https://imdb-video.media-imdb.com/vi3877612057/1434659607842-pgv4ql-1616202333253.mp4?Expires=1719838038&Signature=s0FFUmNnn0NoZaARVOj7jDOMVdI7yDAdgMa5~xOEwVFO9qcWriOuCjibJZkip0YYZwsmwBU3BRPnK9cqsoXvnfoeVNkGVSWRJBDMgUmGlRaPcmG9Ddfls3krrfRRUpwFe435Q4C9phyyVtTOmmsZAm2WEd5rbj7f4LHRP-S7F8HaARmUnEYnCozTXFGbBLmT41VfuFbeIBNPW6anu2jsKb0K~XC2TETj9Jrf3bJc0p9WDcTxRQ~C~xmKyMMeK70kShxegpOI2fxuyxPaSjwq~Qq4F8K2lgzqOWHi7vdR1tB3pd~m5smxaIR91l7GzpE5mL-ey1TAUNUJYhcTrt0Ivw__&Key-Pair-Id=APKAIFLZBVQZ24NQH3KA"
+        )
+        result["Video_name"] = ("coudnt find; but watch this cool vid!")
+    else:
+        result["Video_URL"] = (
+            video_url
+        )
+        result["Video_name"] = (name_vid)
+
+    result["videos"] = videos
+    result["names"] = names
     result["URL"] = (
         f"https://www.imdb.com/title/{result.get('id', 'NOT FOUND')}"  # The url pattern of IMDb movies
     )

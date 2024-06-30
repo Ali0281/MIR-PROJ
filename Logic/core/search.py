@@ -1,11 +1,9 @@
 import json
 from typing import List, Dict
 
-from Logic.core.indexer.index_reader import Index_reader
-from Logic.core.indexer.indexes_enum import Indexes, Index_types
-from Logic.core.utility.preprocess import Preprocessor
-from Logic.core.utility.scorer import Scorer
-import numpy as np
+from bs4 import BeautifulSoup
+
+from Logic.core.utility import IMDbCrawler
 from Logic.core.utility import Preprocessor, Scorer
 from Logic.core.indexer import Indexes, Index_types, Index_reader
 
@@ -287,11 +285,31 @@ def get_movie_by_id(id: str, movies_dataset: List[Dict[str, str]]) -> Dict[str, 
             break
     if result is None:
         result = movies_dataset[0]
+    ##########################################################################################
+    crawler = IMDbCrawler()
+    respond = crawler.crawl("https://www.imdb.com/title/"+result["id"])
+    soup = BeautifulSoup(respond.content, 'html.parser')
+    img_url = ""
+    try:
+        img_ = soup.find("img", {"class": "ipc-image"})
+        if img_ is None: raise Exception("unknown title field")
+        img_url = img_.src
+        print(img_url)
+    except Exception as e:
+        print(f"failed to get img_url, exception : {e}")
+    finally:
+        img_url = img_url if img_url is not None else ""
 
-    result["Image_URL"] = (
-        "https://m.media-amazon.com/images/M/MV5BNDE3ODcxYzMtY2YzZC00NmNlLWJiNDMtZDViZWM2MzIxZDYwXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_.jpg"
-        # a default picture for selected movies
-    )
+    #############################################################################################
+    if img_url == "":
+        print("biiiiiiiiiiiiiiiip")
+        result["Image_URL"] = (
+            "https://m.media-amazon.com/images/M/MV5BNDE3ODcxYzMtY2YzZC00NmNlLWJiNDMtZDViZWM2MzIxZDYwXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_.jpg"
+        )
+    else:
+        result["Image_URL"] = (
+           img_url
+        )
     result["URL"] = (
         f"https://www.imdb.com/title/{result.get('id', 'NOT FOUND')}"  # The url pattern of IMDb movies
     )
